@@ -1,4 +1,4 @@
-module dataframe-go
+module github.com/tradeoforigin/dataframe-go
 
 go 1.18
 
