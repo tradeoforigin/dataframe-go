@@ -1,7 +1,7 @@
 package types
 
 import (
-	"dataframe-go"
+	"github.com/tradeoforigin/dataframe-go"
 	"time"
 )
 

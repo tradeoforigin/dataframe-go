@@ -2,7 +2,7 @@ package tests
 
 import (
 	"context"
-	"dataframe-go"
+	"github.com/tradeoforigin/dataframe-go"
 	"math"
 	"math/rand"
 	"testing"
