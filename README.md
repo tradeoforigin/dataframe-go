@@ -88,24 +88,24 @@ Output:
 
 ### Series manipulation
 
-Series provides a few functions for data manipulation. Let series `s` is series of type `dataframe.Series[float64]`:
+Series provides a few functions for data manipulation:
 
-1. `s.Value(row int, options ...Options) float64` to get value at row. This function also provides negative indexing e.g. `s.Value(-1)` to get value from the end of the series `s`.
-2. `s.Prepend(val []float64, options ...Options)` to preppend one or many values into series.
-3. `s.Append(val []float64, options ...Options) int` to append one or many values into series. It means that values are added at end of the series `s`.
-4. `s.Insert(row int, val []T, options ...Options)` inserts one or many values into series at row.
+1. `s.Value(row int, options ...Options) T` to get value at row. This function also provides negative indexing e.g. `s.Value(-1)` to get value from the end of the series `s`.
+2. `s.Prepend(val []T, options ...Options)` to preppend one or more values into series.
+3. `s.Append(val []T, options ...Options) int` to append one or more values into series. It means that values are added at end of the series `s`.
+4. `s.Insert(row int, val []T, options ...Options)` inserts one or more values into series at row.
 5. `s.Remove(row int, options ...Options)` to remove data at row.
 6. `s.Reset(options ...Options)` clears all of the data from series.
 7. `s.Update(row int, val T, options ...Options)` is used to change single value at given row.
 
 Example:
 ```go
-s := dataframe.NewSeries[float64]("numbers", nil, 1, 2, 3)
-s.Append([]float64 { 0, 0 })
-s.Prepend([] float64 { 0, 0 })
-s.Insert(2, []float64 { -1 })
-s.Update(-1, -1)
-s.Remove(0)
+s := dataframe.NewSeries[float64]("numbers", nil, 1, 2, 3) // [1, 2, 3]
+s.Append([]float64 { 0, 0 }) // [1, 2, 3, 0, 0]
+s.Prepend([] float64 { 0, 0 }) // [0, 0, 1, 2, 3, 0, 0]
+s.Insert(2, []float64 { -1 }) // [0, 0, -1, 1, 2, 3, 0, 0]
+s.Update(-1, -1) // [0, 0, -1, 1, 2, 3, 0, -1]
+s.Remove(0) // [0, -1, 1, 2, 3, 0, -1]
 fmt.Println(s.Table())
 ```
 
@@ -124,12 +124,12 @@ Output:
 +-----+---------+
 ```
 
-### Fill rand
+### Fill values randomly
 
-There is possibility to fill series by random values:
+There is possibility to fill series with random values:
 
 ```go
-s := dataframe.NewSeries("a", nil, math.NaN(), math.NaN(), math.NaN())
+s := dataframe.NewSeries("rand", nil, math.NaN(), math.NaN(), math.NaN())
 s.FillRand(dataframe.RandFillerFloat64())
 ```
 
@@ -173,16 +173,16 @@ Output:
 
 Values iterator is used to iterate series data. Iterator provides options to set:
     
-    1. `InitialRow` - iterator starts at this row. Can be negative value for indexing from the end of the series.
-    2. `Step` - iteration steps. Can be negative value to iterate backwards.
-    3. `DontLock` - if true is passed then series is not locked by iterator.
+1. `InitialRow` - iterator starts at this row. Can be negative value for indexing from the end of the series.
+2. `Step` - iteration steps. Can be negative value to iterate backwards.
+3. `DontLock` - if true is passed then series is not locked by iterator.
 
 ```go
 s := dataframe.NewSeries("iterate", nil, 1, 2, 3)
 
 iterator := s.Iterator()
 for iterator.Next() {
-	fmt.Println(iterator.Index, "->", iterator.Value)
+    fmt.Println(iterator.Index, "->", iterator.Value)
 }
 ```
 
@@ -200,7 +200,7 @@ You can apply function to modify values of series. As well as you can filter dat
 Apply:
 
 ```go
-s := dataframe.NewSeries("apply", nil, 1., 2., 3.)
+s := dataframe.NewSeries("apply", nil, 1., 2., 3.) // *dataframe.Series[float64]
 	
 applyFn := func (val float64, row, nRows int) float64 {
 	return val / 2
