@@ -191,13 +191,13 @@ func (df *DataFrame) insert(row int, vals any) {
 			panic("no. of args not equal to no. of series")
 		}
 
-		for idx, val := range v {
-			df.Series[idx].InsertAny(row, val)
+		for idx, s := range df.Series {
+			s.InsertAny(row, v[idx])
 
-			sRows := df.Series[idx].NRows(dontLock)
+			sRows := s.NRows(dontLock)
 			if idx != 0 && nRows != sRows {
 				panic("series length does not match")
-			} else  {
+			} else {
 				nRows = sRows
 			}
 		}
