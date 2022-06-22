@@ -2,13 +2,12 @@ package csv
 
 import (
 	"strconv"
-	"strings"
 	"time"
 )
 
 var String = NewConverter(
 	func(s string) string {
-		return strings.Trim(s, "\"")
+		return s
 	},
 )
 

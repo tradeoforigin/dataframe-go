@@ -646,6 +646,31 @@ Output:
 
 You can also define custom converter to fit your needs.
 
+For export dataframe to CSV you can use:
+
+```go
+s1 := dataframe.NewSeries("str", nil, "one", "one,two", "one,two,three")
+s2 := dataframe.NewSeries("num", nil, 1, 12, 123)
+
+df := dataframe.NewDataFrame(s1, s2)
+
+f, err := os.OpenFile("data/export.csv", os.O_WRONLY|os.O_CREATE, 0600)
+if err != nil {
+    panic(err)
+}
+
+err = csv.Export(ctx, f, df)
+if err != nil {
+	panic(err)
+}
+
+f.Close()
+```
+
 ### 3.8. Math functions and fakers
 
 There is no need for creating series by string expressions. Math functions for series can be covered by `df.Apply` or `s.Apply` function. The faker can be covered by custom `RandFillers`. Math functions and fakers may be added in future.
+
+
+
+

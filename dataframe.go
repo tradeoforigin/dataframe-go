@@ -357,7 +357,7 @@ func (df *DataFrame) Names(options ...Options) []string {
 		defer df.lock.RUnlock()
 	}
 
-	names := []string{}
+	names := make([]string, 0, len(df.Series))
 	for _, aSeries := range df.Series {
 		names = append(names, aSeries.Name(options...))
 	}
