@@ -27,6 +27,29 @@ type ExportOptions struct {
 	UseCRLF bool
 }
 
+// Export creates CSV format of dataframe.
+//
+// Example:
+//
+//	ctx := context.Background()
+//
+//	s1 := dataframe.NewSeries("str", nil, "one", "one,two", "one,two,three")
+//	s2 := dataframe.NewSeries("num", nil, 1, 12, 123)
+//	
+//	df1 := dataframe.NewDataFrame(s1, s2)
+//	
+//	f, err := os.OpenFile("data/export.csv", os.O_WRONLY|os.O_CREATE, 0600)
+//	if err != nil {
+//		panic(err)
+//	}
+//	
+//	err = csv.Export(ctx, f, df1)
+//	if err != nil {
+//		panic(err)
+//	}
+//	
+//	f.Close()
+//
 func Export(ctx context.Context, w io.Writer, df *dataframe.DataFrame, options ...ExportOptions) error {
 	opts := dataframe.DefaultOptions(options...)
 

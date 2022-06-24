@@ -14,6 +14,8 @@ type ApplyDataFrameFn func(vals map[string]any, row, nRows int) map[string]any
 // val contains the value of the current row. The returned value is the updated value.
 type ApplySeriesFn[T any] func(val T, row, nRows int) T
 
+// ApplyDataFrame applies function to DataFrame. If ApplyOptions are set as `ApplyOptions { InPlace: true }`
+// then dataframe is modified, otherwise new dataframe is returned.
 func ApplyDataFrame(ctx context.Context, df *DataFrame, fn ApplyDataFrameFn, options ...ApplyOptions) (*DataFrame, error) {
 
 	if fn == nil {
@@ -63,10 +65,14 @@ func ApplyDataFrame(ctx context.Context, df *DataFrame, fn ApplyDataFrameFn, opt
 	return df, nil
 }
 
+// Apply applies function to DataFrame. If ApplyOptions are set as `ApplyOptions { InPlace: true }`
+// then dataframe is modified, otherwise new dataframe is returned.
 func (df *DataFrame) Apply(ctx context.Context, fn ApplyDataFrameFn, options ...ApplyOptions) (*DataFrame, error) {
 	return ApplyDataFrame(ctx, df, fn, options...)
 }
 
+// ApplySeries applies filter function to series. If ApplyOptions are set as `ApplyOptions { InPlace: true }`
+// then series is modified, otherwise new series is returned.
 func ApplySeries[T any](ctx context.Context, s *Series[T], fn ApplySeriesFn[T], options ...ApplyOptions) (*Series[T], error) {
 
 	if fn == nil {
@@ -112,6 +118,8 @@ func ApplySeries[T any](ctx context.Context, s *Series[T], fn ApplySeriesFn[T], 
 	return s, nil
 }
 
+// Apply applies filter function to series. If ApplyOptions are set as `ApplyOptions { InPlace: true }`
+// then series is modified, otherwise new series is returned.
 func (s *Series[T]) Apply(ctx context.Context, fn ApplySeriesFn[T], options ...ApplyOptions) (*Series[T], error) {
 	return ApplySeries(ctx, s, fn, options...)
 }

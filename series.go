@@ -30,6 +30,15 @@ type Series[T any] struct {
 	sync.RWMutex
 }
 
+// NewSeries creates a series of type T with defined name. Size of the series
+// can be prealocated by passing `init`. Series can also by filled by data passed
+// as vals. 
+// 
+// Example: 
+//
+// x := NewSeries[float64]("x", nil, 1, 2, 3)
+// y := NewSeries("y", nil, 1., 2., 3.)
+//
 func NewSeries[T any](name string, init *SeriesInit, vals ...T) *Series[T] {
 	s := &Series[T] {
 		name: name,
@@ -69,6 +78,7 @@ func NewSeries[T any](name string, init *SeriesInit, vals ...T) *Series[T] {
 	return s
 }
 
+// Fill values as NaN if series is type of float32 or float 64
 func (s *Series[T]) fillDefault(vals any, lVals, size int) {
 	// s.nilCount = s.nilCount + size - lVals
 	switch v := vals.(type) {
@@ -121,9 +131,6 @@ func (s *Series[T]) NRows(options ...Options) int {
 }
 
 // Value returns the value of a particular row.
-// The return value could be nil or the concrete type
-// the data type held by the series.
-// Pointers are never returned.
 func (s *Series[T]) Value(row int, options ...Options) T {
 	opts := DefaultOptions(options...)
 
@@ -141,14 +148,12 @@ func (s *Series[T]) Value(row int, options ...Options) T {
 // ValueString returns a string representation of a
 // particular row. The string representation is defined
 // by the function set in SetValueToStringFormatter.
-// By default, a nil value is returned as "NaN".
 func (s *Series[T]) ValueString(row int, options ...Options) string {
 	return s.valFormatter(s.Value(row, options...))
 }
 
 // Prepend is used to set a value to the beginning of the
-// series. val can be a concrete data type or nil. Nil
-// represents the absence of a value.
+// series.
 func (s *Series[T]) Prepend(val []T, options ...Options) {
 	opts := DefaultOptions(options...)
 	
@@ -171,8 +176,6 @@ func (s *Series[T]) Prepend(val []T, options ...Options) {
 }
 
 // Append is used to set a value to the end of the series.
-// val can be a concrete data type or nil. Nil represents
-// the absence of a value.
 func (s *Series[T]) Append(val []T, options ...Options) int {
 	opts := DefaultOptions(options...)
 	
@@ -187,8 +190,7 @@ func (s *Series[T]) Append(val []T, options ...Options) int {
 
 // Insert is used to set a value at an arbitrary row in
 // the series. All existing values from that row onwards
-// are shifted by 1. val can be a concrete data type or nil.
-// Nil represents the absence of a value.
+// are shifted by 1.
 func (s *Series[T]) Insert(row int, val []T, options ...Options) {
 	opts := DefaultOptions(options...)
 	
@@ -226,8 +228,6 @@ func (s *Series[T]) Reset(options ...Options) {
 }
 
 // Update is used to update the value of a particular row.
-// val can be a concrete data type or nil. Nil represents
-// the absence of a value.
 func (s *Series[T]) Update(row int, val T, options ...Options) {
 	opts := DefaultOptions(options...)
 
@@ -242,7 +242,7 @@ func (s *Series[T]) Update(row int, val T, options ...Options) {
 	s.Values[row] = val
 }
 
-// ValuesIterator will return a function that can be used to iterate through all the values.
+// valuesIterator will return a function that can be used to iterate through all the values.
 func (s *Series[T]) valuesIterator(options ...IteratorOptions) IteratorFn[T] {
 	opts := DefaultOptions(options...)
 
@@ -282,6 +282,7 @@ func (s *Series[T]) valuesIterator(options ...IteratorOptions) IteratorFn[T] {
 	}
 }
 
+// Iterator will return a iterator that can be used to iterate through all the values.
 func (s *Series[T]) Iterator(options ...IteratorOptions) Iterator[T] {
 	return NewIterator(s.valuesIterator(options...))
 }
@@ -491,8 +492,7 @@ func (s *Series[T]) String() string {
 
 }
 
-// FillRand will fill a Series with random data. probNil is a value between between 0 and 1 which
-// determines if a row is given a nil value.
+// FillRand will fill a Series with random data. 
 func (s *Series[T]) FillRand(rnd RandFn[T]) {
 
 

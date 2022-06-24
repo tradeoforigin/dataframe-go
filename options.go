@@ -17,7 +17,7 @@ type Options struct {
 // for IsEqual(...) on top of Series or DataFrame.
 //
 // Defaults:
-// 		Options { CheckName: false, DontLock: false }
+// 		IsEqualOptions { CheckName: false, DontLock: false }
 //
 // Properties:
 //	• `CheckName` - indicates that name should be checked in form of equality
@@ -30,7 +30,7 @@ type IsEqualOptions struct {
 // for Filter(...) on top of Series or DataFrame.
 //
 // Defaults:
-// 		Options { InPlace: false, DontLock: false }
+// 		FilterOptions { InPlace: false, DontLock: false }
 //
 // Properties:
 //	• `InPlace` - Filter affects current Series/DataFrame and no new one is returned
@@ -43,7 +43,7 @@ type FilterOptions struct {
 // for Apply(...) on top of Series or DataFrame.
 //
 // Defaults:
-// 		Options { InPlace: false, DontLock: false }
+// 		ApplyOptions { InPlace: false, DontLock: false }
 //
 // Properties:
 //	• `InPlace` - Apply affects current Series/DataFrame and no new one is returned
@@ -60,7 +60,7 @@ type ApplyOptions = FilterOptions
 // Range(0, -1) is the same as Range(0, len(arr) - 1)
 //
 // Defaults:
-// 		Options { Start: 0, End: nil }
+// 		RangeOptions { Start: 0, End: nil }
 //
 // Properties:
 //	• `Start` - Defines start row/index for iteration/copy
@@ -75,7 +75,7 @@ type RangeOptions struct {
 // for Table(...) on top of Series or DataFrame.
 //
 // Defaults:
-//		Options { 
+//		TableOptions { 
 //			Series: nil, 
 //			Range: RangeOptions { Start: 0, End: nil }
 //			DontLock: false 
@@ -91,14 +91,42 @@ type TableOptions struct {
 	DontLock bool
 }
 
+// SortOptions is defined as an optional parameters
+// for Sort(...) on top of Series or DataFrame.
+//
+// Defaults:
+//		SortOptions { 
+//			Stable: false,
+//			Desc: false,
+//			DontLock: false 
+//		}
+//
+// Properties:
+//	• `Desc` - if true, then values will be sorted in descending order
+//	• `DontLock` - if set to true, then operation is performed without locking RWMutex 
 type SortOptions struct {
 	Stable, Desc, DontLock bool
 }
 
+// SortOptions is defined as an optional parameters
+// for Iterator(...) on top of Series or DataFrame.
+//
+// Defaults:
+//		IteratorOptions { 
+//			InitialRow: 0,
+//			Step: 1,
+//			DontLock: false 
+//		}
+//
+// Properties:
+//	• `InitialRow` - if set then iterator will start at this row.
+//	• `Step` - iteration step. Negative values causes backward iterations
+//	• `DontLock` - if set to true, then operation is performed without locking RWMutex 
 type IteratorOptions struct {
 	InitialRow, Step int
 	DontLock bool
 }
 
 var dontLock = Options { DontLock: true }
+// shortcut for Options { DontLock: true }
 var DontLock = dontLock

@@ -8,6 +8,9 @@ import (
 
 type RandFn[T any] func() T
 
+// RandFillerFloat64 is helper function to fill data of *Series[float64]
+// randomly. probNil is an optional parameter which indicates probability
+// of NaN value as a return.
 func RandFillerFloat64(probNil ...float64) RandFn[float64] {
 	var pNil float64
 

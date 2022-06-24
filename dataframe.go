@@ -12,7 +12,7 @@ import (
 )
 
 // DataFrame allows you to handle numerous
-//series of data conveniently.
+// series of data conveniently.
 type DataFrame struct {
 	Series []SeriesAny
 	n      int // Number of rows
@@ -20,6 +20,14 @@ type DataFrame struct {
 	lock sync.RWMutex
 }
 
+// NewDataFrame creates a dataframe from passed series.
+// 
+// Example: 
+//
+// x := NewSeries[float64]("x", nil, 1, 2, 3)
+// y := NewSeries("y", nil, 1., 2., 3.)
+// df := NewDataFrame(x, y)
+//
 func NewDataFrame(se ...SeriesAny) *DataFrame {
 	df := &DataFrame{
 		Series: []SeriesAny{},
@@ -64,11 +72,6 @@ func (df *DataFrame) NRows(options ...Options) int {
 }
 
 // Row returns the series' values for a particular row.
-//
-// Example:
-//
-//  df.Row(5, false)
-//
 func (df *DataFrame) Row(row int, options ...Options) map[string]any {
 	opts := DefaultOptions(options...)
 	
@@ -85,7 +88,7 @@ func (df *DataFrame) Row(row int, options ...Options) map[string]any {
 	return out
 }
 
-// ValuesIterator will return a function that can be used to iterate through all the values.
+// valuesIterator will return a function that can be used to iterate through all the values.
 func (df *DataFrame) valuesIterator(options ...IteratorOptions) IteratorFn[map[string]any] {
 	opts := DefaultOptions(options...)
 
@@ -131,6 +134,7 @@ func (df *DataFrame) valuesIterator(options ...IteratorOptions) IteratorFn[map[s
 	}
 }
 
+// Iterator will return a function that can be used to iterate through all the values.
 func (s *DataFrame) Iterator(options ...IteratorOptions) Iterator[map[string]any] {
 	return NewIterator(s.valuesIterator(options...))
 }

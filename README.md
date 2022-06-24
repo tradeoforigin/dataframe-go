@@ -1,26 +1,21 @@
+![GitHub go.mod Go version (branch & subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/tradeoforigin/dataframe-go/main)
+![GitHub all releases](https://img.shields.io/github/downloads/tradeoforigin/dataframe-go/total)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/tradeoforigin/dataframe-go)
 # dataframe-go
-
-Dataframes are used for statistics, machine-learning, and data manipulation/exploration. This package is based on [rocketlaunchr/dataframe-go](https://github.com/rocketlaunchr/dataframe-go) and rewritten with Go 1.18 generics. This package is still in progress and all of the [rocketlaunchr/dataframe-go](https://github.com/rocketlaunchr/dataframe-go) features will be added in the future. If you are interested in contribution, your help is welcome. 
-
+Dataframes are used for statistics, machine-learning, and data manipulation/exploration. This package is based on [rocketlaunchr/dataframe-go](https://github.com/rocketlaunchr/dataframe-go) and rewritten with Go 1.18 generics. This package is still in progress and all of the [rocketlaunchr/dataframe-go](https://github.com/rocketlaunchr/dataframe-go) features will be added in the future. If you are interested in contributing, your help is welcome.
 ## 1. Installation and usage
-
 ```
 go get -u github.com/tradeoforigin/dataframe-go
 ```
-
 ```go
 import "github.com/tradeoforigin/dataframe-go"
 ```
-
 ## 2. Series
-
-Series is generic struct to store any kind of data you wish. Series is also type of `interface SeriesAny` to handle different types in `DataFrame`. 
-
+Series is a generic struct to store any data you wish. Series is also a type of `interface SeriesAny` to handle different types in `DataFrame`. 
 ```go
 s := dataframe.NewSeries("weight", nil, 115.5, 93.1)
 fmt.Println(s.Table())
 ```
-
 Output:
 ```
 +-----+---------+
@@ -32,13 +27,11 @@ Output:
 | 2X1 | FLOAT64 |
 +-----+---------+
 ```
-
 Series with type definition:
 ```go
 s := dataframe.NewSeries[float64]("weight", nil, 115, 93.1)
 fmt.Println(s.Table())
 ```
-
 Output:
 ```
 +-----+---------+
@@ -50,21 +43,17 @@ Output:
 | 2X1 | FLOAT64 |
 +-----+---------+
 ```
-
 You can also define series of your own type:
-
 ```go
 type Dog struct {
     name string
 }
-
 s := dataframe.NewSeries("dogs", nil, 
     Dog { "Abby" }, 
     Dog { "Agas" },
 )
 fmt.Println(s.Table())
 ```
-
 Output:
 ```
 +-----+----------+
@@ -76,13 +65,11 @@ Output:
 | 2X1 | MAIN DOG |
 +-----+----------+
 ```
-
 Or series of any type:
 ```go
 s := dataframe.NewSeries[any]("numbers", nil, 10, "ten", 10.0)
 fmt.Println(s.Table())
 ```
-
 Output:
 ```
 +-----+---------+
@@ -95,20 +82,18 @@ Output:
 | 3X1 |   ANY   |
 +-----+---------+
 ```
-
 ### 2.1. Series manipulation
-
 Series provides a few functions for data manipulation:
-
-1. `s.Value(row int, options ...Options) T` to get value at row. This function also provides negative indexing e.g. `s.Value(-1)` to get value from the end of the series `s`.
-2. `s.Prepend(val []T, options ...Options)` to preppend one or more values into series.
-3. `s.Append(val []T, options ...Options) int` to append one or more values into series. It means that values are added at end of the series `s`.
-4. `s.Insert(row int, val []T, options ...Options)` inserts one or more values into series at row.
-5. `s.Remove(row int, options ...Options)` to remove data at row.
-6. `s.Reset(options ...Options)` clears all of the data from series.
-7. `s.Update(row int, val T, options ...Options)` is used to change single value at given row.
+1. `s.Value(row int, options ...Options) T` returns the value of a particular row.
+2. `s.Prepend(val []T, options ...Options)` Prepend is used to set a value to the beginning of the series.
+3. `s.Append(val []T, options ...Options) int` is used to set a value to the end of the series.
+4. `s.Insert(row int, val []T, options ...Options)` Insert is used to set a value at an arbitrary row in the series. All existing values from that row onwards are shifted by 1.
+5. `s.Remove(row int, options ...Options)` is used to delete the value of a particular row.
+6. `s.Reset(options ...Options)` is used clear all data contained in the Series.
+7. `s.Update(row int, val T, options ...Options)` is used to update the value of a particular row.
 
 Example:
+
 ```go
 s := dataframe.NewSeries[float64]("numbers", nil, 1, 2, 3) // [1, 2, 3]
 s.Append([]float64 { 0, 0 }) // [1, 2, 3, 0, 0]
@@ -120,6 +105,7 @@ fmt.Println(s.Table())
 ```
 
 Output:
+
 ```
 +-----+---------+
 | 0:  |    0    |
@@ -133,7 +119,6 @@ Output:
 | 7X1 | FLOAT64 |
 +-----+---------+
 ```
-
 ### 2.2. Fill values randomly
 
 There is possibility to fill series with random values:
@@ -151,14 +136,13 @@ To sort series values you need to provide `CompareFn[T any]` as series less than
 
 ```go
 s := dataframe.NewSeries("sorted", nil, 0, 2, 1, 4, 3, 6, 5, 10, 9, 8, 7)
-
 s.SetIsLessThanFunc(dataframe.IsLessThanFunc[int])
 s.Sort(ctx) // DESC -> s.Sort(ctx, dataframe.SortOptions { Desc: true })
-
 fmt.Println(s.Table())
 ```
 
 Output:
+
 ```
 +------+--------+
 |      | SORTED |
@@ -183,13 +167,12 @@ Output:
 
 Values iterator is used to iterate series data. Iterator provides options to set:
     
-1. `InitialRow` - iterator starts at this row. Can be negative value for indexing from the end of the series.
+1. `InitialRow` - iterator starts at this row. It can be a negative value for indexing from the end of the series.
 2. `Step` - iteration steps. Can be negative value to iterate backwards.
-3. `DontLock` - if true is passed then series is not locked by iterator.
+3. `DontLock` - if true is passed, then the series is not locked by the iterator.
 
 ```go
 s := dataframe.NewSeries("iterate", nil, 1, 2, 3)
-
 iterator := s.Iterator()
 for iterator.Next() {
     fmt.Println(iterator.Index, "->", iterator.Value)
@@ -197,30 +180,28 @@ for iterator.Next() {
 ```
 
 Output:
+
 ```
 0 -> 1
 1 -> 2
 2 -> 3
 ```
-
 ### 2.5. Apply and Filter
 
-You can apply function to modify values of series. As well as you can filter data of series and `DROP` or `KEEP` values. 
+You can apply the function to modify the values of the series. Also, you can filter series data and `DROP` or `KEEP` values. 
 
 Apply:
 
 ```go
 s := dataframe.NewSeries("apply", nil, 1., 2., 3.) // *dataframe.Series[float64]
-	
+    
 applyFn := func (val float64, row, nRows int) float64 {
-	return val / 2
+    return val / 2
 }
-
 _, err := s.Apply(ctx, applyFn, dataframe.ApplyOptions { InPlace: true })
 if err != nil {
-	panic(err)
+    panic(err)
 }
-
 fmt.Println(s.Table())
 ```
 
@@ -242,19 +223,17 @@ Filter:
 
 ```go
 s := dataframe.NewSeries("filter", nil, 1., math.NaN(), 3.)
-	
+    
 filterFn := func (val float64, row, nRows int) (dataframe.FilterAction, error) {
-	if math.IsNaN(val) {
-		return dataframe.DROP, nil
-	}
-	return dataframe.KEEP, nil
+    if math.IsNaN(val) {
+        return dataframe.DROP, nil
+    }
+    return dataframe.KEEP, nil
 }
-
 _, err := s.Filter(ctx, filterFn, dataframe.FilterOptions { InPlace: true })
 if err != nil {
-	panic(err)
+    panic(err)
 }
-
 fmt.Println(s.Table())
 ```
 
@@ -273,14 +252,12 @@ Output:
 
 ### 2.6. Copy and Equality
 
-You can create copy of series as well as you can compare two different series.
+You can create a copy of the series as well as you can compare two different series.
 
 ```go
 s1 := dataframe.NewSeries[float64]("s1", nil, 1, 2, 3, 4)
 s2 := s1.Copy() // copy series s1
-
 eq, err := s.IsEqual(ctx, sc1) // returns true, nil 
-
 // // lines below returns false, nil
 // s2.Rename("s2")
 // eq, err := s.IsEqual(ctx, sc1, dataframe.IsEqualOptions { CheckName: true }) 
@@ -288,14 +265,12 @@ eq, err := s.IsEqual(ctx, sc1) // returns true, nil
 
 ## 3. DataFrame
 
-DataFrame is container for Series of any kind. You can think of a Dataframe as an excel spreadsheet. 
+DataFrame is a container for a Series of any kind. You can think of a Dataframe as an excel spreadsheet. 
 
 ```go
 x := dataframe.NewSeries("x", nil, 1., 2., 3.)
 y := dataframe.NewSeries("y", nil, 1., 2., 3.)
-
 df := dataframe.NewDataFrame(x, y)
-
 fmt.Println(df.Table())
 ```
 
@@ -317,43 +292,37 @@ Output:
 
 DataFrame provides functions for manipulation with data. Similarly like for the series:
 
-1. `df.Row(row int, options ...Options) map[string]any` returns values for specific row.
-2. `df.Prepend(vals any, options ...Options)` adds value to the start of all series
-3. `df.Append(vals any, options ...Options)` adds value to the end of all series
-4. `df.Insert(row int, vals any, options ...Options)` inserts value to all of the series at specific row.
-5. `df.Remove(row int, options ...Options)` removes row at index `row`
-6. `df.UpdateRow(row int, vals any, options ...Options)` updatese whole row. Means that all of the series are updated.
-7. `df.Update(row int, col any, val any, options ...Options)` - updates value for specific row and column (series)
-8. `df.ReorderColumns(newOrder []string, options ...Options) error` changes orders of columns / series indexes. 
-9. `df.RemoveSeries(seriesName string, options ...Options) error` removes whole series by name.
-10. `df.AddSeries(s SeriesAny, colN *int, options ...Options) error` adds new series into DataFrame
-11. `df.Swap(row1, row2 int, options ...Options)` swaps two rows.
+1. `df.Row(row int, options ...Options) map[string]any` returns the series' values for a particular row.
+2. `df.Prepend(vals any, options ...Options)` inserts a row at the beginning.
+3. `df.Append(vals any, options ...Options)` inserts a row at the end.
+4. `df.Insert(row int, vals any, options ...Options)` adds a row to a particular position.
+5. `df.Remove(row int, options ...Options)` deletes a row.
+6. `df.UpdateRow(row int, vals any, options ...Options)` will update an entire row.
+7. `df.Update(row int, col any, val any, options ...Options)` is used to update a specific entry. `col` can be the name of the series or the column number.
+8. `df.ReorderColumns(newOrder []string, options ...Options) error` ReorderColumns reorders the columns based on an ordered list of column names. The length of newOrder must match the number of columns in the Dataframe. The column names in newOrder must be unique.
+9. `df.RemoveSeries(seriesName string, options ...Options) error` will remove a Series from the Dataframe.
+10. `df.AddSeries(s SeriesAny, colN *int, options ...Options) error` will add a Series to the end of the DataFrame, unless set by ColN.
+11. `df.Swap(row1, row2 int, options ...Options)` is used to swap 2 values based on their row position.
 
 In many cases the values should be provided as `map[string]any`, `map[int]any` or `[]any`.
 
 ```go
 s1 := dataframe.NewSeries[float64]("a", nil, 1, 2, 3, 4)
 s2 := dataframe.NewSeries[float64]("b", nil, 1, 2, 3, 4)
-
 df := dataframe.NewDataFrame(s1, s2)
-
 df.Append(map[string]any {
-	"a": [] float64 { 0, 0 },
-	"b": [] float64 { 0, 0 },
+    "a": [] float64 { 0, 0 },
+    "b": [] float64 { 0, 0 },
 })
-
 df.Prepend(map[string]any {
-	"a": [] float64 { 0, 0 },
-	"b": [] float64 { 0, 0 },
+    "a": [] float64 { 0, 0 },
+    "b": [] float64 { 0, 0 },
 })
-
 df.Insert(2, map[string]any {
-	"a": -1.0,
-	"b": -1.0,
+    "a": -1.0,
+    "b": -1.0,
 })
-
 df.Update(-1, "a", -1.0)
-
 fmt.Println(df.Table())
 ```
 
@@ -384,32 +353,27 @@ You can fill values with RandFiller at once:
 ```go
 s1 := dataframe.NewSeries("a", nil, math.NaN(), math.NaN(), math.NaN())
 s2 := dataframe.NewSeries("b", nil, math.NaN(), math.NaN(), math.NaN())
-
 df := dataframe.NewDataFrame(s1, s2)
-
 df.FillRand(func() any {
-	return rand.Float64()
+    return rand.Float64()
 })
 ```
 
 ### 3.3. Sorting
 
-To sort DataFrame you need to provide `CompareFn[T any]` for all of the series as is less than function: 
+To sort DataFrame you need to provide `CompareFn[T any]` for all of the series as an input to the function IsLessThanFunc():
 
 ```go
 s1 := dataframe.NewSeries("a", nil, 0, 2, 1, 4, 3, 6, 5, 10, 9, 8, 7)
 s2 := dataframe.NewSeries("b", nil, 0, 2, 1, 4, 3, 6, 5, 10, 9, 8, 7)
-
 s1.SetIsLessThanFunc(dataframe.IsLessThanFunc[int])
 s2.SetIsLessThanFunc(dataframe.IsLessThanFunc[int])
-
 df := dataframe.NewDataFrame(s1, s2)
-	
+    
 df.Sort(ctx, []dataframe.SortKey {
-	{ Key: "a" }, // Desc: true
-	{ Key: "b" }, // Desc: true
+    { Key: "a" }, // Desc: true
+    { Key: "b" }, // Desc: true
 })
-
 fmt.Println(df.Table())
 ```
 
@@ -439,16 +403,14 @@ Output:
 
 Values iterator is used to iterate dataframe rows. Iterator provides options to set:
     
-1. `InitialRow` - iterator starts at this row. Can be negative value for indexing from the end of the series.
-2. `Step` - iteration steps. Can be negative value to iterate backwards.
-3. `DontLock` - if true is passed then dataframe is not locked by iterator.
+1. `InitialRow` - iterator starts at this row. It can be a negative value for indexing from the end of the series.
+2. `Step` - iteration steps. It can be a negative value to iterate backwards.
+3. `DontLock` - if true is passed, then the dataframe is not locked by the iterator.
 
 ```go
 s1 := dataframe.NewSeries("a", nil, 1, 2, 3)
 s2 := dataframe.NewSeries("b", nil, 1, 2, 3)
-
 df := dataframe.NewDataFrame(s1, s2)
-
 var iterator = df.Iterator()
 for iterator.Next() {
     fmt.Println(iterator.Index, iterator.Value)
@@ -465,46 +427,34 @@ Output:
 
 ### 3.5. Apply and Filter
 
-You can apply function to modify rows of dataframe. As well as you can filter data of dataframe and DROP or KEEP values.
+You can apply the function to modify rows of the dataframe. Also, you can filter data of the dataframe and DROP or KEEP values.
 
 Apply:
 
 ```go
 y1  := dataframe.NewSeries[float64]("y1", &dataframe.SeriesInit{Size: 24})
 y2 := dataframe.NewSeries[float64]("y2", &dataframe.SeriesInit{Size: 24})
-	
+    
 df := dataframe.NewDataFrame(y1, y2)
 
-//  // Simple example
-//  fn := func (vals map[string]any, row, nRows int) map[string]any {
-// 	    x := float64(row + 1)
-//      return map[string]any{
-// 		    "y": math.Sin(2 * math.Pi * x / float64(nRows)),
-// 	    }
-//  }
-
 fn := func (vals map[string]any, row, nRows int) map[string]any {
-	x := float64(row + 1)
-	y := math.Sin(2 * math.Pi * x / 24)
-
-	if y == 1 || y == -1 {
-		return map[string]any{
-			"y1": y,
-			"y2": y,
-		}
-	}
-
+    x := float64(row + 1)
+    y := math.Sin(2 * math.Pi * x / 24)
+    if y == 1 || y == -1 {
+        return map[string]any{
+            "y1": y,
+            "y2": y,
+        }
+    }
     // We can also update just one column
-	return map[string]any{
-		"y1": y,
-	}
+    return map[string]any{
+        "y1": y,
+    }
 }
-
 _, err := df.Apply(ctx, fn, dataframe.ApplyOptions { InPlace: true })
 if err != nil {
-	panic(err)
+    panic(err)
 }
-
 fmt.Println(df.Table())
 ```
 
@@ -548,19 +498,17 @@ Filter:
 ```go
 s := dataframe.NewSeries("s", nil, 1, 2, 3, 4, 5)
 df := dataframe.NewDataFrame(s)
-	
+    
 fn := func (vals map[string]any, row, nRows int) (dataframe.FilterAction, error) {
-	if row % 2 != 0 {
-		return dataframe.DROP, nil
-	}
-	return dataframe.KEEP, nil
+    if row % 2 != 0 {
+        return dataframe.DROP, nil
+    }
+    return dataframe.KEEP, nil
 }
-
 _, err := df.Filter(ctx, fn, dataframe.FilterOptions { InPlace: true })
 if err != nil {
-	panic(err)
+    panic(err)
 }
-
 fmt.Println(df.Table())
 ```
 
@@ -580,14 +528,12 @@ Output:
 
 ### 3.6. Copy and Equality
 
-You can create copy of dataframe as well as you can compare two different dataframes.
+You can create a copy of the dataframe and compare two different dataframes.
 
 ```go
 s := dataframe.NewSeries[float64]("s", nil, 1, 2, 3, 4)
-
 df1 := dataframe.NewDataFrame(s)
 df2 := df1.Copy() // To copy series s1
-
 eq, err := df1.IsEqual(ctx, df2) // returns true, nil 
 ```
 
@@ -607,20 +553,16 @@ A,B,C,D
 0.0,1.67302752,0.08,0
 0.0,1.6726333184,0.08,0
 1.6681,0.0,0.02,1`
-
 reader := strings.NewReader(csvString)
-
 df, err := csv.Load(ctx, reader, map[string]csv.ConverterAny {
-	"A": csv.Float64,
-	"B": csv.Float64,
-	"C": csv.Float64,
-	"D": csv.Float64,
+    "A": csv.Float64,
+    "B": csv.Float64,
+    "C": csv.Float64,
+    "D": csv.Float64,
 })
-
 if err != nil {
-	t.Fatal(err)
+    t.Fatal(err)
 }
-
 fmt.Println(df.Table())
 ```
 
@@ -651,26 +593,21 @@ For export dataframe to CSV you can use:
 ```go
 s1 := dataframe.NewSeries("str", nil, "one", "one,two", "one,two,three")
 s2 := dataframe.NewSeries("num", nil, 1, 12, 123)
-
 df := dataframe.NewDataFrame(s1, s2)
-
 f, err := os.OpenFile("data/export.csv", os.O_WRONLY|os.O_CREATE, 0600)
 if err != nil {
     panic(err)
 }
-
 err = csv.Export(ctx, f, df)
 if err != nil {
-	panic(err)
+    panic(err)
 }
-
 f.Close()
 ```
 
 ### 3.8. Math functions and fakers
 
 There is no need for creating series by string expressions. Math functions for series can be covered by `df.Apply` or `s.Apply` function. The faker can be covered by custom `RandFillers`. Math functions and fakers may be added in future.
-
 
 
 

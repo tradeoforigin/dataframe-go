@@ -12,16 +12,13 @@ type SeriesAny interface {
 	// Rename renames the series.
 	Rename(n string, options ...Options) 
 
-
+	// Type returns type of the series as string value.
 	Type() string
 
 	// NRows returns how many rows the series contains.
 	NRows(options ...Options) int
 
-	// Value returns the value of a particular row.
-	// The return value could be nil or the concrete type
-	// the data type held by the series.
-	// Pointers are never returned.
+	// ValueAny returns the value of a particular row.
 	ValueAny(row int, options ...Options) any
 
 	// ValueString returns a string representation of a
@@ -31,19 +28,15 @@ type SeriesAny interface {
 	ValueString(row int, options ...Options) string
 
 	// Prepend is used to set a value to the beginning of the
-	// series. val can be a concrete data type or nil. Nil
-	// represents the absence of a value.
+	// series.
 	PrependAny(val any, options ...Options)
 
-	// Append is used to set a value to the end of the series.
-	// val can be a concrete data type or nil. Nil represents
-	// the absence of a value.
+	// AppendAny is used to set a value to the end of the series.
 	AppendAny(val any, options ...Options) int
 
-	// Insert is used to set a value at an arbitrary row in
+	// InsertAny is used to set a value at an arbitrary row in
 	// the series. All existing values from that row onwards
-	// are shifted by 1. val can be a concrete data type or nil.
-	// Nil represents the absence of a value.
+	// are shifted by 1.
 	InsertAny(row int, val any, options ...Options)
 
 	// Remove is used to delete the value of a particular row.
@@ -53,11 +46,9 @@ type SeriesAny interface {
 	Reset(options ...Options)
 
 	// Update is used to update the value of a particular row.
-	// val can be a concrete data type or nil. Nil represents
-	// the absence of a value.
 	UpdateAny(row int, val any, options ...Options)
 
-	// ValuesIterator will return a function that can be used to iterate through all the values.
+	// IteratorAny will return a iterator that can be used to iterate through all the values.
 	IteratorAny(options ...IteratorOptions) Iterator[any]
 
 	// SetValueToStringFormatter is used to set a function
@@ -68,17 +59,17 @@ type SeriesAny interface {
 	// Swap is used to swap 2 values based on their row position.
 	Swap(row1, row2 int, options ...Options)
 
-	// IsEqual	returns true if a is equal to b.
+	// IsEqualAnyFunc	returns true if a is equal to b.
 	IsEqualAnyFunc(a, b any) bool
 
-	// IsLessThan	returns true if a is less than b.
+	// IsLessThanAnyFunc	returns true if a is less than b.
 	IsLessThanAnyFunc(a, b any) bool
 
-	// SetIsEqual	sets a function which can be used to determine
+	// SetIsEqualAnyFunc	sets a function which can be used to determine
 	// if 2 values in the series are equal.
 	SetIsEqualAnyFunc(f CompareFn[any])
 
-	// SetIsLessThan	sets a function which can be used to determine
+	// SetIsLessThanAnyFunc	sets a function which can be used to determine
 	// if a value is less than another in the series.
 	SetIsLessThanAnyFunc(f CompareFn[any])
 
@@ -86,7 +77,7 @@ type SeriesAny interface {
 	// It will return true if sorting was completed or false when the context is canceled.
 	Sort(ctx context.Context, options ...SortOptions) (completed bool)
 
-	// Copy will create a new copy of the series.
+	// CopyAny will create a new copy of the series.
 	// It is recommended that you lock the Series before attempting
 	// to Copy.
 	CopyAny(options ...RangeOptions) SeriesAny
@@ -97,11 +88,10 @@ type SeriesAny interface {
 	// String implements the fmt.Stringer interface. It does not lock the Series.
 	String() string
 
-	// FillRand will fill a Series with random data. probNil is a value between between 0 and 1 which
-	// determines if a row is given a nil value.
+	// FillRandAny will fill a Series with random data.
 	FillRandAny(rnd RandFn[any])
 
-	// IsEqual returns true if s2's values are equal to s.
+	// IsEqualAny returns true if s2's values are equal to s.
 	IsEqualAny(ctx context.Context, s2 SeriesAny, options ...IsEqualOptions) (bool, error)
 
 	// RWMutex Lock
@@ -116,6 +106,6 @@ type SeriesAny interface {
 	// RWMutex RUnlock
 	RUnlock()
 
-	// Create clone with empty Values
+	// Creates clone with empty Values
 	cloneAsEmpty(size ...int) SeriesAny
 }

@@ -9,7 +9,7 @@ import (
 type SortKey struct {
 
 	// Key can be an int (position of series) or string (name of series).
-	Key interface{}
+	Key any
 
 	// Desc can be set to sort in descending order.
 	Desc bool

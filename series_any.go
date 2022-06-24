@@ -2,17 +2,13 @@ package dataframe
 
 import "context"
 
-// Value returns the value of a particular row.
-// The return value could be nil or the concrete type
-// the data type held by the series.
-// Pointers are never returned.
+// ValueAny returns the value of a particular row.
 func (s *Series[T]) ValueAny(row int, options ...Options) any {
 	return s.Value(row, options...)
 }
 
-// Prepend is used to set a value to the beginning of the
-// series. val can be a concrete data type or nil. Nil
-// represents the absence of a value.
+// PrependAny is used to set a value to the beginning of the
+// series. 
 func (s *Series[T]) PrependAny(val any, options ...Options) {
 	switch v := val.(type) {
 	case []T:
@@ -25,9 +21,7 @@ func (s *Series[T]) PrependAny(val any, options ...Options) {
 	}
 }
 
-// Append is used to set a value to the end of the series.
-// val can be a concrete data type or nil. Nil represents
-// the absence of a value.
+// AppendAny is used to set a value to the end of the series.
 func (s *Series[T]) AppendAny(val any, options ...Options) int {
 	switch v := val.(type) {
 	case []T:
@@ -39,10 +33,9 @@ func (s *Series[T]) AppendAny(val any, options ...Options) int {
 	return s.Append([]T { val.(T) }, options...)
 }
 
-// Insert is used to set a value at an arbitrary row in
+// InsertAny is used to set a value at an arbitrary row in
 // the series. All existing values from that row onwards
-// are shifted by 1. val can be a concrete data type or nil.
-// Nil represents the absence of a value.
+// are shifted by 1.
 func (s *Series[T]) InsertAny(row int, val any, options ...Options) {
 	switch v := val.(type) {
 	case []T:
@@ -55,9 +48,7 @@ func (s *Series[T]) InsertAny(row int, val any, options ...Options) {
 	}
 }
 
-// Update is used to update the value of a particular row.
-// val can be a concrete data type or nil. Nil represents
-// the absence of a value.
+// UpdateAny is used to update the value of a particular row.
 func (s *Series[T]) UpdateAny(row int, val any, options ...Options) {
 	switch v := val.(type) {
 	case T:
@@ -68,22 +59,22 @@ func (s *Series[T]) UpdateAny(row int, val any, options ...Options) {
 	}
 }
 
-// ValuesIterator will return a function that can be used to iterate through all the values.
+// IteratorAny will return a iterator that can be used to iterate through all the values.
 func (s *Series[T]) IteratorAny(options ...IteratorOptions) Iterator[any] {
 	return s.Iterator(options...).toAnyIterator()
 }
 
-// IsEqual	returns true if a is equal to b.
+// IsEqualAnyFunc	returns true if a is equal to b.
 func (s *Series[T]) IsEqualAnyFunc(a, b any) bool {
 	return s.isEqualFunc(a.(T), b.(T))
 }
 
-// IsLessThan	returns true if a is less than b.
+// IsLessThanAnyFunc	returns true if a is less than b.
 func (s *Series[T]) IsLessThanAnyFunc(a, b any) bool {
 	return s.isLessThanFunc(a.(T), b.(T))
 }
 
-// SetIsEqual	sets a function which can be used to determine
+// SetIsEqualAnyFunc	sets a function which can be used to determine
 // if 2 values in the series are equal.
 func (s *Series[T]) SetIsEqualAnyFunc(f CompareFn[any]) {
 	s.SetIsEqualFunc(func(f1, f2 T) bool {
@@ -91,7 +82,7 @@ func (s *Series[T]) SetIsEqualAnyFunc(f CompareFn[any]) {
 	})
 }
 
-// SetIsLessThan	sets a function which can be used to determine
+// SetIsLessThanAnyFunc	sets a function which can be used to determine
 // if a value is less than another in the series.
 func (s *Series[T]) SetIsLessThanAnyFunc(f CompareFn[any]) {
 	s.SetIsLessThanFunc(func(f1, f2 T) bool {
@@ -99,16 +90,13 @@ func (s *Series[T]) SetIsLessThanAnyFunc(f CompareFn[any]) {
 	})
 }
 
-// Copy will create a new copy of the series.
+// CopyAny will create a new copy of the series.
 // It is recommended that you lock the Series before attempting
 // to Copy.
 func (s *Series[T]) CopyAny(options ...RangeOptions) SeriesAny {
 	return s.Copy(options...)
 }
 
-// Copy will create a new copy of the series.
-// It is recommended that you lock the Series before attempting
-// to Copy.
 func (s *Series[T]) cloneAsEmpty(size ...int) SeriesAny {
 	var _size, _capacity = len(s.Values), len(s.Values)
 
@@ -131,15 +119,14 @@ func (s *Series[T]) cloneAsEmpty(size ...int) SeriesAny {
 	}
 }
 
-// FillRand will fill a Series with random data. probNil is a value between between 0 and 1 which
-// determines if a row is given a nil value.
+// FillRandAny will fill a Series with random data. 
 func (s *Series[T]) FillRandAny(rnd RandFn[any]) {
 	s.FillRand(func () T {
 		return rnd().(T)
 	})
 }
 
-// IsEqual returns true if s2's values are equal to s.
+// IsEqualAny returns true if s2's values are equal to s.
 func (s *Series[T]) IsEqualAny(ctx context.Context, s2 SeriesAny, options ...IsEqualOptions) (bool, error) {
 	return s.IsEqual(ctx, s2.(*Series[T]), options...)
 }

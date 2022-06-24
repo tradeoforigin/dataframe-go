@@ -1,5 +1,8 @@
 package utils
 
+// MakeSlice makes slice of type T and returned slice is filled
+// by `fill` value of T. size and capacity can be passet as in
+// standard make function.
 func MakeSlice[T any](fill T, size ...int) []T {
 	var s, c int
 

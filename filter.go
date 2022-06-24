@@ -26,6 +26,8 @@ type FilterSeriesFn[T any] func(val T, row, nRows int) (FilterAction, error)
 // If the function returns DROP, then the row is removed. If KEEP or CHOOSE is chosen, the row is kept.
 type FilterDataFrameFn func(vals map[string]any, row, nRows int) (FilterAction, error)
 
+// FilterSeries applies filter function to series. If FilterOptions are set as `FilterOptions { InPlace: true }`
+// then series is modified, otherwise new series is returned.
 func FilterSeries[T any](ctx context.Context, s *Series[T], fn FilterSeriesFn[T], options ...FilterOptions) (*Series[T], error) {
 
 	if fn == nil {
@@ -83,10 +85,14 @@ func FilterSeries[T any](ctx context.Context, s *Series[T], fn FilterSeriesFn[T]
 	return s, nil
 }
 
+// Filter applies filter function to series. If FilterOptions are set as `FilterOptions { InPlace: true }`
+// then series is modified, otherwise new series is returned.
 func (s *Series[T]) Filter(ctx context.Context, fn FilterSeriesFn[T], options ...FilterOptions) (*Series[T], error) {
 	return FilterSeries(ctx, s, fn, options...)
 }
 
+// FilterDataFrame applies filter function to DataFrame. If FilterOptions are set as `FilterOptions { InPlace: true }`
+// then dataframe is modified, otherwise new dataframe is returned.
 func FilterDataFrame(ctx context.Context, df *DataFrame, fn FilterDataFrameFn, options ...FilterOptions) (*DataFrame, error) {
 
 	if fn == nil {
@@ -152,6 +158,8 @@ func FilterDataFrame(ctx context.Context, df *DataFrame, fn FilterDataFrameFn, o
 	return df, nil
 }
 
+// Filter applies filter function to DataFrame. If FilterOptions are set as `FilterOptions { InPlace: true }`
+// then dataframe is modified, otherwise new dataframe is returned.
 func (df *DataFrame) Filter(ctx context.Context, fn FilterDataFrameFn, options ...FilterOptions) (*DataFrame, error) {
 	return FilterDataFrame(ctx, df, fn, options...)
 }

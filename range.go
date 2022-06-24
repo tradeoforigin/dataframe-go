@@ -2,6 +2,7 @@ package dataframe
 
 import "errors"
 
+// Limits sets start and end index.
 func (r RangeOptions) Limits(length int) (int, int, error) {
 	var start, end = r.Start, -1
 
