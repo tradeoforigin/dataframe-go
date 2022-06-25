@@ -5,14 +5,14 @@ import (
 	"time"
 )
 
-// CSV converted for string types
+// CSV converter for string types
 var String = NewConverter(
 	func(s string) string {
 		return s
 	},
 )
 
-// CSV converted for float64 types
+// CSV converter for float64 types
 var Float64 = NewConverter(
 	func(s string) float64 {
 		v, err := strconv.ParseFloat(s, 64)
@@ -23,7 +23,7 @@ var Float64 = NewConverter(
 	},
 )
 
-// CSV converted for float32 types
+// CSV converter for float32 types
 var Float32 = NewConverter(
 	func(s string) float32 {
 		v, err := strconv.ParseFloat(s, 32)
@@ -34,7 +34,7 @@ var Float32 = NewConverter(
 	},
 )
 
-// CSV converted for int64 types
+// CSV converter for int64 types
 var Int64 = NewConverter(
 	func(s string) int64 {
 		v, err := strconv.ParseInt(s, 10, 64)
@@ -45,7 +45,7 @@ var Int64 = NewConverter(
 	},
 )
 
-// CSV converted for int32 types
+// CSV converter for int32 types
 var Int32 = NewConverter(
 	func(s string) int32 {
 		v, err := strconv.ParseInt(s, 10, 32)
@@ -56,7 +56,7 @@ var Int32 = NewConverter(
 	},
 )
 
-// CSV converted for int types
+// CSV converter for int types
 var Int = NewConverter(
 	func(s string) int {
 		v, err := strconv.ParseInt(s, 10, 0)
@@ -67,7 +67,7 @@ var Int = NewConverter(
 	},
 )
 
-// CSV converted for uint64 types
+// CSV converter for uint64 types
 var UInt64 = NewConverter(
 	func(s string) uint64 {
 		v, err := strconv.ParseUint(s, 10, 64)
@@ -78,7 +78,7 @@ var UInt64 = NewConverter(
 	},
 )
 
-// CSV converted for uint32 types
+// CSV converter for uint32 types
 var UInt32 = NewConverter(
 	func(s string) uint32 {
 		v, err := strconv.ParseUint(s, 10, 32)
@@ -89,7 +89,7 @@ var UInt32 = NewConverter(
 	},
 )
 
-// CSV converted for uint types
+// CSV converter for uint types
 var UInt = NewConverter(
 	func(s string) uint {
 		v, err := strconv.ParseUint(s, 10, 0)
@@ -100,7 +100,7 @@ var UInt = NewConverter(
 	},
 )
 
-// CSV converted for bool types
+// CSV converter for bool types
 var Bool = NewConverter(
 	func(s string) bool {
 		v, err := strconv.ParseBool(s)
@@ -111,7 +111,7 @@ var Bool = NewConverter(
 	},
 )
 
-// CSV converted for complex128 types
+// CSV converter for complex128 types
 var Complex128 = NewConverter(
 	func(s string) complex128 {
 		v, err := strconv.ParseComplex(s, 128)
@@ -122,7 +122,7 @@ var Complex128 = NewConverter(
 	},
 )
 
-// CSV converted for complex64 types
+// CSV converter for complex64 types
 var Complex64 = NewConverter(
 	func(s string) complex64 {
 		v, err := strconv.ParseComplex(s, 64)
@@ -133,7 +133,7 @@ var Complex64 = NewConverter(
 	},
 )
 
-// CSV converted for time.Time types
+// CSV converter for time.Time types
 var Time = NewConverter(
 	func (s string) time.Time {
 		t, err := time.Parse(time.RFC3339, s)

@@ -1,22 +1,33 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/tradeoforigin/dataframe-go.svg)](https://pkg.go.dev/github.com/tradeoforigin/dataframe-go)
 ![GitHub go.mod Go version (branch & subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/tradeoforigin/dataframe-go/main)
-![GitHub all releases](https://img.shields.io/github/downloads/tradeoforigin/dataframe-go/total)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/tradeoforigin/dataframe-go)
+![GitHub all releases](https://img.shields.io/github/downloads/tradeoforigin/dataframe-go/total)
+
 # dataframe-go
+
 Dataframes are used for statistics, machine-learning, and data manipulation/exploration. This package is based on [rocketlaunchr/dataframe-go](https://github.com/rocketlaunchr/dataframe-go) and rewritten with Go 1.18 generics. This package is still in progress and all of the [rocketlaunchr/dataframe-go](https://github.com/rocketlaunchr/dataframe-go) features will be added in the future. If you are interested in contributing, your help is welcome.
+
 ## 1. Installation and usage
+
 ```
 go get -u github.com/tradeoforigin/dataframe-go
 ```
+
 ```go
 import "github.com/tradeoforigin/dataframe-go"
 ```
+
 ## 2. Series
+
 Series is a generic struct to store any data you wish. Series is also a type of `interface SeriesAny` to handle different types in `DataFrame`. 
+
 ```go
 s := dataframe.NewSeries("weight", nil, 115.5, 93.1)
 fmt.Println(s.Table())
 ```
+
 Output:
+
 ```
 +-----+---------+
 |     | WEIGHT  |
@@ -27,12 +38,16 @@ Output:
 | 2X1 | FLOAT64 |
 +-----+---------+
 ```
+
 Series with type definition:
+
 ```go
 s := dataframe.NewSeries[float64]("weight", nil, 115, 93.1)
 fmt.Println(s.Table())
 ```
+
 Output:
+
 ```
 +-----+---------+
 |     | WEIGHT  |
@@ -43,7 +58,9 @@ Output:
 | 2X1 | FLOAT64 |
 +-----+---------+
 ```
+
 You can also define series of your own type:
+
 ```go
 type Dog struct {
     name string
@@ -54,7 +71,9 @@ s := dataframe.NewSeries("dogs", nil,
 )
 fmt.Println(s.Table())
 ```
+
 Output:
+
 ```
 +-----+----------+
 |     |   DOGS   |
@@ -65,12 +84,16 @@ Output:
 | 2X1 | MAIN DOG |
 +-----+----------+
 ```
+
 Or series of any type:
+
 ```go
 s := dataframe.NewSeries[any]("numbers", nil, 10, "ten", 10.0)
 fmt.Println(s.Table())
 ```
+
 Output:
+
 ```
 +-----+---------+
 |     | NUMBERS |
@@ -82,12 +105,15 @@ Output:
 | 3X1 |   ANY   |
 +-----+---------+
 ```
+
 ### 2.1. Series manipulation
+
 Series provides a few functions for data manipulation:
+
 1. `s.Value(row int, options ...Options) T` returns the value of a particular row.
-2. `s.Prepend(val []T, options ...Options)` Prepend is used to set a value to the beginning of the series.
+2. `s.Prepend(val []T, options ...Options)` is used to set a value to the beginning of the series.
 3. `s.Append(val []T, options ...Options) int` is used to set a value to the end of the series.
-4. `s.Insert(row int, val []T, options ...Options)` Insert is used to set a value at an arbitrary row in the series. All existing values from that row onwards are shifted by 1.
+4. `s.Insert(row int, val []T, options ...Options)` is used to set a value at an arbitrary row in the series. All existing values from that row onwards are shifted by 1.
 5. `s.Remove(row int, options ...Options)` is used to delete the value of a particular row.
 6. `s.Reset(options ...Options)` is used clear all data contained in the Series.
 7. `s.Update(row int, val T, options ...Options)` is used to update the value of a particular row.
@@ -299,7 +325,7 @@ DataFrame provides functions for manipulation with data. Similarly like for the 
 5. `df.Remove(row int, options ...Options)` deletes a row.
 6. `df.UpdateRow(row int, vals any, options ...Options)` will update an entire row.
 7. `df.Update(row int, col any, val any, options ...Options)` is used to update a specific entry. `col` can be the name of the series or the column number.
-8. `df.ReorderColumns(newOrder []string, options ...Options) error` ReorderColumns reorders the columns based on an ordered list of column names. The length of newOrder must match the number of columns in the Dataframe. The column names in newOrder must be unique.
+8. `df.ReorderColumns(newOrder []string, options ...Options) error` reorders the columns based on an ordered list of column names. The length of newOrder must match the number of columns in the Dataframe. The column names in newOrder must be unique.
 9. `df.RemoveSeries(seriesName string, options ...Options) error` will remove a Series from the Dataframe.
 10. `df.AddSeries(s SeriesAny, colN *int, options ...Options) error` will add a Series to the end of the DataFrame, unless set by ColN.
 11. `df.Swap(row1, row2 int, options ...Options)` is used to swap 2 values based on their row position.
