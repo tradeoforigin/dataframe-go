@@ -3,6 +3,8 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/tradeoforigin/dataframe-go)
 ![GitHub all releases](https://img.shields.io/github/downloads/tradeoforigin/dataframe-go/total)
 
+![alt text](./assets/dataframe-go.png?raw=true)
+
 # dataframe-go
 
 Dataframes are used for statistics, machine-learning, and data manipulation/exploration. This package is based on [rocketlaunchr/dataframe-go](https://github.com/rocketlaunchr/dataframe-go) and rewritten with Go 1.18 generics. This package is still in progress and all of the [rocketlaunchr/dataframe-go](https://github.com/rocketlaunchr/dataframe-go) features will be added in the future. If you are interested in contributing, your help is welcome.
