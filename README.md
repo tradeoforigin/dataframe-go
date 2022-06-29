@@ -1,7 +1,6 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/tradeoforigin/dataframe-go.svg)](https://pkg.go.dev/github.com/tradeoforigin/dataframe-go)
 ![GitHub go.mod Go version (branch & subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/tradeoforigin/dataframe-go/main)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/tradeoforigin/dataframe-go)
-![GitHub all releases](https://img.shields.io/github/downloads/tradeoforigin/dataframe-go/total)
 
 <img src="./assets/dataframe-go.png?raw=true" width="100%" />
 
@@ -589,7 +588,7 @@ df, err := csv.Load(ctx, reader, map[string]csv.ConverterAny {
     "D": csv.Float64,
 })
 if err != nil {
-    t.Fatal(err)
+    panic(err)
 }
 fmt.Println(df.Table())
 ```
