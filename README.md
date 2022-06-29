@@ -3,7 +3,7 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/tradeoforigin/dataframe-go)
 ![GitHub all releases](https://img.shields.io/github/downloads/tradeoforigin/dataframe-go/total)
 
-![alt text](./assets/dataframe-go.png?raw=true)
+<img src="./assets/dataframe-go.png?raw=true" width="100%" />
 
 # dataframe-go
 
