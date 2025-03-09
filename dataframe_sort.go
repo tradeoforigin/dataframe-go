@@ -23,7 +23,7 @@ type SortKey struct {
 // to allow sorting based on the provided `SortKey` values.
 type sorter struct {
 	keys []SortKey
-	df   *dataFrame
+	df   *DataFrame
 	ctx  context.Context
 }
 
@@ -71,7 +71,7 @@ func (s *sorter) Swap(i, j int) {
 // Sort is used to sort the DataFrame based on the provided keys. It will sort the DataFrame's rows
 // according to the values in the series specified by the keys.
 // If the context is canceled, it returns false to indicate that the sorting was not completed.
-func (df *dataFrame) Sort(ctx context.Context, keys []SortKey, options ...SortOptions) (completed bool) {
+func (df *DataFrame) Sort(ctx context.Context, keys []SortKey, options ...SortOptions) (completed bool) {
 	if len(keys) == 0 {
 		return true
 	}

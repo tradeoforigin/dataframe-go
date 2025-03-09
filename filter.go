@@ -7,19 +7,19 @@ import "context"
 type FilterAction int
 
 const (
-	// DROP signifies that the row should be removed from the series or dataframe.
+	// DROP signifies that the row should be removed from the *Series or dataframe.
 	DROP FilterAction = 0
 
-	// KEEP signifies that the row should be retained in the series or dataframe.
+	// KEEP signifies that the row should be retained in the *Series or dataframe.
 	KEEP FilterAction = 1
 
 	// CHOOSE is synonymous with KEEP and signifies that the row should be retained.
 	CHOOSE FilterAction = 1
 )
 
-// FilterSeriesFn defines a filter function for a Series. It is used in the `FilterSeries` function.
-// This function is called for each row in the series, where `val` is the value of the current row,
-// `row` is the row index, and `nRows` is the total number of rows in the series.
+// FilterSeriesFn defines a filter function for a *Series. It is used in the `FilterSeries` function.
+// This function is called for each row in the *Series, where `val` is the value of the current row,
+// `row` is the row index, and `nRows` is the total number of rows in the *Series.
 // The function should return a `FilterAction` indicating whether the row should be kept or dropped, and possibly an error.
 type FilterSeriesFn[T any] func(val T, row, nRows int) (FilterAction, error)
 
@@ -29,11 +29,11 @@ type FilterSeriesFn[T any] func(val T, row, nRows int) (FilterAction, error)
 // The function should return a `FilterAction` indicating whether the row should be kept or dropped, and possibly an error.
 type FilterDataFrameFn func(vals map[string]any, row, nRows int) (FilterAction, error)
 
-// FilterSeries applies the given filter function to a series. If `FilterOptions` is set with `InPlace: true`,
-// the series will be modified directly. Otherwise, a new series is returned.
+// FilterSeries applies the given filter function to a *Series. If `FilterOptions` is set with `InPlace: true`,
+// the *Series will be modified directly. Otherwise, a new *Series is returned.
 // The filter function is applied to each row, and rows that return `DROP` will be removed.
 // Rows that return `KEEP` or `CHOOSE` will be kept.
-func FilterSeries[T any](ctx context.Context, s Series[T], fn FilterSeriesFn[T], options ...FilterOptions) (Series[T], error) {
+func FilterSeries[T any](ctx context.Context, s *Series[T], fn FilterSeriesFn[T], options ...FilterOptions) (*Series[T], error) {
 
 	if fn == nil {
 		panic("fn is required")
@@ -90,17 +90,17 @@ func FilterSeries[T any](ctx context.Context, s Series[T], fn FilterSeriesFn[T],
 	return s, nil
 }
 
-// Filter applies the given filter function to the series. This is a method of the `series[T]` type.
-// If `FilterOptions` is set with `InPlace: true`, the series will be modified directly. Otherwise, a new series is returned.
-func (s *series[T]) Filter(ctx context.Context, fn FilterSeriesFn[T], options ...FilterOptions) (Series[T], error) {
-	return FilterSeries(ctx, Series[T](s), fn, options...)
+// Filter applies the given filter function to the *Series. This is a method of the `Series[T]` type.
+// If `FilterOptions` is set with `InPlace: true`, the *Series will be modified directly. Otherwise, a new *Series is returned.
+func (s *Series[T]) Filter(ctx context.Context, fn FilterSeriesFn[T], options ...FilterOptions) (*Series[T], error) {
+	return FilterSeries(ctx, s, fn, options...)
 }
 
 // FilterDataFrame applies the given filter function to a dataframe. If `FilterOptions` is set with `InPlace: true`,
 // the dataframe will be modified directly. Otherwise, a new dataframe is returned.
 // The filter function is applied to each row, and rows that return `DROP` will be removed.
 // Rows that return `KEEP` or `CHOOSE` will be kept.
-func FilterDataFrame(ctx context.Context, df DataFrame, fn FilterDataFrameFn, options ...FilterOptions) (DataFrame, error) {
+func FilterDataFrame(ctx context.Context, df *DataFrame, fn FilterDataFrameFn, options ...FilterOptions) (*DataFrame, error) {
 
 	if fn == nil {
 		panic("fn is required")
@@ -141,7 +141,7 @@ func FilterDataFrame(ctx context.Context, df DataFrame, fn FilterDataFrameFn, op
 	}
 
 	if !opts.InPlace {
-		// Create all series
+		// Create all *Series
 		seriess := []SeriesAny{}
 		for _, s := range df.Series() {
 			seriess = append(seriess, s.cloneAsEmpty(len(transfer), len(transfer)))
@@ -165,8 +165,8 @@ func FilterDataFrame(ctx context.Context, df DataFrame, fn FilterDataFrameFn, op
 	return df, nil
 }
 
-// Filter applies the given filter function to the dataframe. This is a method of the `dataFrame` type.
+// Filter applies the given filter function to the dataframe. This is a method of the `DataFrame` type.
 // If `FilterOptions` is set with `InPlace: true`, the dataframe will be modified directly. Otherwise, a new dataframe is returned.
-func (df *dataFrame) Filter(ctx context.Context, fn FilterDataFrameFn, options ...FilterOptions) (DataFrame, error) {
+func (df *DataFrame) Filter(ctx context.Context, fn FilterDataFrameFn, options ...FilterOptions) (*DataFrame, error) {
 	return FilterDataFrame(ctx, df, fn, options...)
 }

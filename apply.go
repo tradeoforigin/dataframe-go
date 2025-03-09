@@ -5,18 +5,18 @@ import (
 )
 
 // ApplyDataFrameFn is a function type used by the Apply function when working with DataFrames.
-// It takes a map containing the values of the current row, where the keys are either ints (index of series) or strings (name of series).
+// It takes a map containing the values of the current row, where the keys are either ints (index of Series) or strings (name of Series).
 // The returned map must only contain the values you intend to update, using the same keys (either string or int).
 // If nil is returned, the existing values for the row are not changed.
 type ApplyDataFrameFn func(vals map[string]any, row, nRows int) map[string]any
 
-// ApplySeriesFn is a function type used by the Apply function when working with series.
-// It takes a single value from the series and returns the updated value for that row.
+// ApplySeriesFn is a function type used by the Apply function when working with Series.
+// It takes a single value from the Series and returns the updated value for that row.
 type ApplySeriesFn[T any] func(val T, row, nRows int) T
 
 // ApplyDataFrame applies the provided function to each row of the dataFrame.
 // If ApplyOptions are set with `ApplyOptions { InPlace: true }`, the dataframe is modified in place; otherwise, a new dataframe is returned.
-func ApplyDataFrame(ctx context.Context, df *dataFrame, fn ApplyDataFrameFn, options ...ApplyOptions) (DataFrame, error) {
+func ApplyDataFrame(ctx context.Context, df *DataFrame, fn ApplyDataFrameFn, options ...ApplyOptions) (*DataFrame, error) {
 
 	if fn == nil {
 		panic("fn is required")
@@ -30,12 +30,12 @@ func ApplyDataFrame(ctx context.Context, df *dataFrame, fn ApplyDataFrameFn, opt
 		defer df.Unlock()
 	}
 
-	var ndf DataFrame
+	var ndf *DataFrame
 
 	if !opts.InPlace {
 		// Create a new dataframe if InPlace is false
 		seriess := []SeriesAny{}
-		for _, s := range df.series {
+		for _, s := range df.Series() {
 			seriess = append(seriess, s.cloneAsEmpty())
 		}
 
@@ -72,14 +72,14 @@ func ApplyDataFrame(ctx context.Context, df *dataFrame, fn ApplyDataFrameFn, opt
 
 // Apply applies a function to a dataframe. If ApplyOptions are set with `ApplyOptions { InPlace: true }`, 
 // the dataframe is modified in place; otherwise, a new dataframe is returned.
-func (df *dataFrame) Apply(ctx context.Context, fn ApplyDataFrameFn, options ...ApplyOptions) (DataFrame, error) {
+func (df *DataFrame) Apply(ctx context.Context, fn ApplyDataFrameFn, options ...ApplyOptions) (*DataFrame, error) {
 	return ApplyDataFrame(ctx, df, fn, options...)
 }
 
-// ApplySeries applies the provided function to each value in the series. 
-// If ApplyOptions are set with `ApplyOptions { InPlace: true }`, the series is modified in place; 
-// otherwise, a new series is returned.
-func ApplySeries[T any](ctx context.Context, s Series[T], fn ApplySeriesFn[T], options ...ApplyOptions) (Series[T], error) {
+// ApplySeries applies the provided function to each value in the Series. 
+// If ApplyOptions are set with `ApplyOptions { InPlace: true }`, the Series is modified in place; 
+// otherwise, a new Series is returned.
+func ApplySeries[T any](ctx context.Context, s *Series[T], fn ApplySeriesFn[T], options ...ApplyOptions) (*Series[T], error) {
 
 	if fn == nil {
 		panic("fn is required")
@@ -87,7 +87,7 @@ func ApplySeries[T any](ctx context.Context, s Series[T], fn ApplySeriesFn[T], o
 
 	opts := DefaultOptions(options...)
 
-	// Lock the series if necessary
+	// Lock the Series if necessary
 	if !opts.DontLock {
 		s.Lock()
 		defer s.Unlock()
@@ -95,14 +95,14 @@ func ApplySeries[T any](ctx context.Context, s Series[T], fn ApplySeriesFn[T], o
 
 	nRows := s.NRows(dontLock)
 
-	var ns Series[T]
+	var ns *Series[T]
 
-	// Create a new series if InPlace is false
+	// Create a new Series if InPlace is false
 	if !opts.InPlace {
 		ns = NewSeries[T](s.Name(dontLock), &SeriesInit{Capacity: nRows})
 	}
 
-	// Iterate over the rows in the series
+	// Iterate over the rows in the Series
 	iterator := s.Iterator(IteratorOptions{InitialRow: 0, Step: 1, DontLock: true})
 
 	// Apply the function to each row
@@ -113,7 +113,7 @@ func ApplySeries[T any](ctx context.Context, s Series[T], fn ApplySeriesFn[T], o
 
 		newVal := fn(iterator.Value, iterator.Index, iterator.Total)
 
-		// Update the series in place or create a new series
+		// Update the Series in place or create a new Series
 		if opts.InPlace {
 			s.Update(iterator.Index, newVal, dontLock)
 		} else {
@@ -121,7 +121,7 @@ func ApplySeries[T any](ctx context.Context, s Series[T], fn ApplySeriesFn[T], o
 		}
 	}
 
-	// Return the updated series
+	// Return the updated Series
 	if !opts.InPlace {
 		return ns, nil
 	}
@@ -129,8 +129,8 @@ func ApplySeries[T any](ctx context.Context, s Series[T], fn ApplySeriesFn[T], o
 	return s, nil
 }
 
-// Apply applies the provided function to a series. If ApplyOptions are set with `ApplyOptions { InPlace: true }`, 
-// the series is modified in place; otherwise, a new series is returned.
-func (s *series[T]) Apply(ctx context.Context, fn ApplySeriesFn[T], options ...ApplyOptions) (Series[T], error) {
-	return ApplySeries(ctx, Series[T](s), fn, options...)
+// Apply applies the provided function to a Series. If ApplyOptions are set with `ApplyOptions { InPlace: true }`, 
+// the Series is modified in place; otherwise, a new Series is returned.
+func (s *Series[T]) Apply(ctx context.Context, fn ApplySeriesFn[T], options ...ApplyOptions) (*Series[T], error) {
+	return ApplySeries(ctx, s, fn, options...)
 }

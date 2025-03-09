@@ -50,7 +50,7 @@ type LoadOptions struct {
 //	if err != nil {
 //		panic(err)
 //	}
-func Load(ctx context.Context, r io.ReadSeeker, converters map[string]ConverterAny, options ...LoadOptions) (dataframe.DataFrame, error) {
+func Load(ctx context.Context, r io.ReadSeeker, converters map[string]ConverterAny, options ...LoadOptions) (*dataframe.DataFrame, error) {
 	// Apply the default options for loading the CSV if not provided.
 	opts := dataframe.DefaultOptions(options...)
 

@@ -2,7 +2,7 @@ package dataframe
 
 // getSeriesAny returns the series of type SeriesAny for a given name or id.
 // It accepts either a string (name) or an integer (id) and returns the corresponding series.
-func (df *dataFrame) getSeriesAny(nameOrId any) SeriesAny {
+func (df *DataFrame) getSeriesAny(nameOrId any) SeriesAny {
 	switch name := nameOrId.(type) {
 	case string:
 		// If the input is a string, it resolves the column by its name
@@ -16,9 +16,9 @@ func (df *dataFrame) getSeriesAny(nameOrId any) SeriesAny {
 // GetSeries is a generic function that returns a typed series for the given `name`
 // in the data frame `df`. The type `T` represents the type of the values in the series,
 // and `U` can either be an integer (column index) or a string (column name).
-func GetSeries[T any, U int | string](df DataFrame, name U) Series[T] {
+func GetSeries[T any, U int | string](df *DataFrame, name U) *Series[T] {
 	// Retrieves the series and casts it to the expected concrete type *series[T]
-	return df.getSeriesAny(name).(Series[T])
+	return df.getSeriesAny(name).(*Series[T])
 }
 
 // DefaultOptions is a helper function to resolve variadic options. If options are provided,

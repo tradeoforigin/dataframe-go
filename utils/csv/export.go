@@ -63,7 +63,7 @@ type ExportOptions struct {
 //
 //	// Close the file after writing
 //	f.Close()
-func Export(ctx context.Context, w io.Writer, df dataframe.DataFrame, options ...ExportOptions) error {
+func Export(ctx context.Context, w io.Writer, df *dataframe.DataFrame, options ...ExportOptions) error {
 	opts := dataframe.DefaultOptions(options...)
 
 	// Create a new CSV writer
