@@ -23,7 +23,7 @@ func TestDataFrameCopyEqual(t *testing.T) {
 		t.Fatalf(`df.IsEqual(ctx, dfc1) = %v, %v, want match for true, <nil>`, eq, err)
 	}
 
-	df.Series[0].Rename("c")
+	df.Series()[0].Rename("c")
 
 	eq, err = df.IsEqual(ctx, dfc1, dataframe.IsEqualOptions { CheckName: true })
 

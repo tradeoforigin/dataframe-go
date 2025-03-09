@@ -20,7 +20,7 @@ import "github.com/tradeoforigin/dataframe-go"
 
 ## 2. Series
 
-Series is a generic struct to store any data you wish. Series is also a type of `interface SeriesAny` to handle different types in `DataFrame`. 
+Series is a generic struct to store any data you wish. Series is also a type of `interface SeriesAny` to handle different types in `DataFrame`.
 
 ```go
 s := dataframe.NewSeries("weight", nil, 115.5, 93.1)
@@ -66,8 +66,8 @@ You can also define series of your own type:
 type Dog struct {
     name string
 }
-s := dataframe.NewSeries("dogs", nil, 
-    Dog { "Abby" }, 
+s := dataframe.NewSeries("dogs", nil,
+    Dog { "Abby" },
     Dog { "Agas" },
 )
 fmt.Println(s.Table())
@@ -146,6 +146,7 @@ Output:
 | 7X1 | FLOAT64 |
 +-----+---------+
 ```
+
 ### 2.2. Fill values randomly
 
 There is possibility to fill series with random values:
@@ -159,7 +160,7 @@ You can also define your own `RandFiller` as function of type `dataframe.RandFn[
 
 ### 2.3. Sorting
 
-To sort series values you need to provide `CompareFn[T any]` as series less than function: 
+To sort series values you need to provide `CompareFn[T any]` as series less than function:
 
 ```go
 s := dataframe.NewSeries("sorted", nil, 0, 2, 1, 4, 3, 6, 5, 10, 9, 8, 7)
@@ -193,7 +194,7 @@ Output:
 ### 2.4. Values iterator
 
 Values iterator is used to iterate series data. Iterator provides options to set:
-    
+
 1. `InitialRow` - iterator starts at this row. It can be a negative value for indexing from the end of the series.
 2. `Step` - iteration steps. Can be negative value to iterate backwards.
 3. `DontLock` - if true is passed, then the series is not locked by the iterator.
@@ -213,15 +214,16 @@ Output:
 1 -> 2
 2 -> 3
 ```
+
 ### 2.5. Apply and Filter
 
-You can apply the function to modify the values of the series. Also, you can filter series data and `DROP` or `KEEP` values. 
+You can apply the function to modify the values of the series. Also, you can filter series data and `DROP` or `KEEP` values.
 
 Apply:
 
 ```go
 s := dataframe.NewSeries("apply", nil, 1., 2., 3.) // *dataframe.Series[float64]
-    
+
 applyFn := func (val float64, row, nRows int) float64 {
     return val / 2
 }
@@ -232,7 +234,7 @@ if err != nil {
 fmt.Println(s.Table())
 ```
 
-Output: 
+Output:
 
 ```
 +-----+---------+
@@ -250,7 +252,7 @@ Filter:
 
 ```go
 s := dataframe.NewSeries("filter", nil, 1., math.NaN(), 3.)
-    
+
 filterFn := func (val float64, row, nRows int) (dataframe.FilterAction, error) {
     if math.IsNaN(val) {
         return dataframe.DROP, nil
@@ -264,7 +266,7 @@ if err != nil {
 fmt.Println(s.Table())
 ```
 
-Output: 
+Output:
 
 ```
 +-----+---------+
@@ -284,15 +286,15 @@ You can create a copy of the series as well as you can compare two different ser
 ```go
 s1 := dataframe.NewSeries[float64]("s1", nil, 1, 2, 3, 4)
 s2 := s1.Copy() // copy series s1
-eq, err := s.IsEqual(ctx, sc1) // returns true, nil 
+eq, err := s.IsEqual(ctx, sc1) // returns true, nil
 // // lines below returns false, nil
 // s2.Rename("s2")
-// eq, err := s.IsEqual(ctx, sc1, dataframe.IsEqualOptions { CheckName: true }) 
+// eq, err := s.IsEqual(ctx, sc1, dataframe.IsEqualOptions { CheckName: true })
 ```
 
 ## 3. DataFrame
 
-DataFrame is a container for a Series of any kind. You can think of a Dataframe as an excel spreadsheet. 
+DataFrame is a container for a Series of any kind. You can think of a Dataframe as an excel spreadsheet.
 
 ```go
 x := dataframe.NewSeries("x", nil, 1., 2., 3.)
@@ -301,7 +303,7 @@ df := dataframe.NewDataFrame(x, y)
 fmt.Println(df.Table())
 ```
 
-Output: 
+Output:
 
 ```
 +-----+---------+---------+
@@ -396,7 +398,7 @@ s2 := dataframe.NewSeries("b", nil, 0, 2, 1, 4, 3, 6, 5, 10, 9, 8, 7)
 s1.SetIsLessThanFunc(dataframe.IsLessThanFunc[int])
 s2.SetIsLessThanFunc(dataframe.IsLessThanFunc[int])
 df := dataframe.NewDataFrame(s1, s2)
-    
+
 df.Sort(ctx, []dataframe.SortKey {
     { Key: "a" }, // Desc: true
     { Key: "b" }, // Desc: true
@@ -404,7 +406,7 @@ df.Sort(ctx, []dataframe.SortKey {
 fmt.Println(df.Table())
 ```
 
-Output: 
+Output:
 
 ```
 +------+-----+-----+
@@ -429,7 +431,7 @@ Output:
 ### 3.4. Values iterator
 
 Values iterator is used to iterate dataframe rows. Iterator provides options to set:
-    
+
 1. `InitialRow` - iterator starts at this row. It can be a negative value for indexing from the end of the series.
 2. `Step` - iteration steps. It can be a negative value to iterate backwards.
 3. `DontLock` - if true is passed, then the dataframe is not locked by the iterator.
@@ -461,7 +463,7 @@ Apply:
 ```go
 y1  := dataframe.NewSeries[float64]("y1", &dataframe.SeriesInit{Size: 24})
 y2 := dataframe.NewSeries[float64]("y2", &dataframe.SeriesInit{Size: 24})
-    
+
 df := dataframe.NewDataFrame(y1, y2)
 
 fn := func (vals map[string]any, row, nRows int) map[string]any {
@@ -525,7 +527,7 @@ Filter:
 ```go
 s := dataframe.NewSeries("s", nil, 1, 2, 3, 4, 5)
 df := dataframe.NewDataFrame(s)
-    
+
 fn := func (vals map[string]any, row, nRows int) (dataframe.FilterAction, error) {
     if row % 2 != 0 {
         return dataframe.DROP, nil
@@ -561,7 +563,7 @@ You can create a copy of the dataframe and compare two different dataframes.
 s := dataframe.NewSeries[float64]("s", nil, 1, 2, 3, 4)
 df1 := dataframe.NewDataFrame(s)
 df2 := df1.Copy() // To copy series s1
-eq, err := df1.IsEqual(ctx, df2) // returns true, nil 
+eq, err := df1.IsEqual(ctx, df2) // returns true, nil
 ```
 
 ### 3.7. Import dataframe from CSV
@@ -635,6 +637,3 @@ f.Close()
 ### 3.8. Math functions and fakers
 
 There is no need for creating series by string expressions. Math functions for series can be covered by `df.Apply` or `s.Apply` function. The faker can be covered by custom `RandFillers`. Math functions and fakers may be added in future.
-
-
-

@@ -4,108 +4,776 @@ import (
 	"context"
 )
 
-type SeriesAny interface {
+// Series[T] defines a generic interface representing a series of data.
+// It provides methods to access, modify, and iterate over the values of the series,
+// as well as apply transformations or perform comparisons on the series data.
+type Series[T any] interface {
 	
-	// Name returns the series name.
-	Name(options ...Options) string
+	// Values returns the entire collection of values stored in the series as a slice of type T.
+	// It is typically used to access all the data in the series.
+	// 
+	// Returns:
+	//  []T - A slice of type T containing all the values in the series.
+	Values() []T
 
-	// Rename renames the series.
-	Rename(n string, options ...Options) 
+	// Value returns the value at the specified row index in the series.
+	// 
+	// Parameters:
+	//   row (int) - The row index of the value to retrieve.
+	//   options (optional) - Additional options that might be needed for retrieving the value.
+	//
+	// Returns:
+	//   T - The value at the specified row index.
+	Value(row int, options ...Options) T
 
-	// Type returns type of the series as string value.
-	Type() string
+	// Append appends a slice of values to the series.
+	// It allows adding multiple new values at the end of the series.
+	// 
+	// Parameters:
+	//   val ([]T) - A slice of values to append to the series.
+	//   options (optional) - Additional options for appending the values.
+	//
+	// Returns:
+	//   int - The new size of the series after appending the values.
+	Append(val []T, options ...Options) int
 
-	// NRows returns how many rows the series contains.
-	NRows(options ...Options) int
+	// Insert inserts a slice of values at a specified row index in the series.
+	// 
+	// Parameters:
+	//   row (int) - The row index at which the values should be inserted.
+	//   val ([]T) - A slice of values to insert into the series.
+	//   options (optional) - Additional options for insertion.
+	//
+	// Returns:
+	//   void
+	Insert(row int, val []T, options ...Options)
 
-	// ValueAny returns the value of a particular row.
-	ValueAny(row int, options ...Options) any
+	// Update updates the value at the specified row index with a new value.
+	// 
+	// Parameters:
+	//   row (int) - The row index to update.
+	//   val (T) - The new value to assign at the specified row index.
+	//   options (optional) - Additional options for updating the value.
+	//
+	// Returns:
+	//   void
+	Update(row int, val T, options ...Options)
 
-	// ValueString returns a string representation of a
-	// particular row. The string representation is defined
-	// by the function set in SetValueToStringFormatter.
-	// By default, a nil value is returned as "NaN".
-	ValueString(row int, options ...Options) string
+	// Iterator returns an iterator for the series that can be used to iterate over its elements.
+	// 
+	// Parameters:
+	//   options (optional) - Additional options for controlling the iteration behavior.
+	//
+	// Returns:
+	//   Iterator[T] - The iterator for iterating over the series.
+	Iterator(options ...IteratorOptions) Iterator[T]
 
-	// Prepend is used to set a value to the beginning of the
-	// series.
-	PrependAny(val any, options ...Options)
-
-	// AppendAny is used to set a value to the end of the series.
-	AppendAny(val any, options ...Options) int
-
-	// InsertAny is used to set a value at an arbitrary row in
-	// the series. All existing values from that row onwards
-	// are shifted by 1.
-	InsertAny(row int, val any, options ...Options)
-
-	// Remove is used to delete the value of a particular row.
-	Remove(row int, options ...Options)
-
-	// Reset is used clear all data contained in the Series.
-	Reset(options ...Options)
-
-	// Update is used to update the value of a particular row.
-	UpdateAny(row int, val any, options ...Options)
-
-	// IteratorAny will return a iterator that can be used to iterate through all the values.
-	IteratorAny(options ...IteratorOptions) Iterator[any]
-
-	// SetValueToStringFormatter is used to set a function
-	// to convert the value of a particular row to a string
-	// representation.
+	// SetValueToStringFormatter sets the formatter function used to convert a value into a string representation.
+	// 
+	// Parameters:
+	//   f (ValueToStringFormatter) - A function to format values in the series to strings.
+	//
+	// Returns:
+	//   void
 	SetValueToStringFormatter(f ValueToStringFormatter)
 
-	// Swap is used to swap 2 values based on their row position.
+	// IsEqualFunc compares two values of type T to check if they are equal.
+	// 
+	// Parameters:
+	//   a (T) - The first value.
+	//   b (T) - The second value.
+	//
+	// Returns:
+	//   bool - True if the values are equal, otherwise false.
+	IsEqualFunc(a, b T) bool
+
+	// IsLessThanFunc compares two values of type T to check if the first is less than the second.
+	// 
+	// Parameters:
+	//   a (T) - The first value.
+	//   b (T) - The second value.
+	//
+	// Returns:
+	//   bool - True if the first value is less than the second, otherwise false.
+	IsLessThanFunc(a, b T) bool
+
+	// SetIsEqualFunc sets the function used to compare equality between two values in the series.
+	// 
+	// Parameters:
+	//   f (CompareFn[T]) - The comparison function to set for equality checks.
+	//
+	// Returns:
+	//   void
+	SetIsEqualFunc(f CompareFn[T])
+
+	// SetIsLessThanFunc sets the function used to compare if one value is less than another in the series.
+	// 
+	// Parameters:
+	//   f (CompareFn[T]) - The comparison function to set for less-than checks.
+	//
+	// Returns:
+	//   void
+	SetIsLessThanFunc(f CompareFn[T])
+
+	// Copy creates and returns a copy of the current series with the same values.
+	// 
+	// Parameters:
+	//   options (optional) - Additional options to control the copying behavior.
+	//
+	// Returns:
+	//   Series[T] - A new series instance that is a copy of the current series.
+	Copy(options ...RangeOptions) Series[T]
+
+	// FillRand fills the series with random values generated by a provided random function.
+	// 
+	// Parameters:
+	//   rnd (RandFn[T]) - The random function to use for generating values in the series.
+	//
+	// Returns:
+	//   void
+	FillRand(rnd RandFn[T])
+
+	// IsEqual checks whether two series of the same type are equal.
+	// This method compares each corresponding value between two series.
+	// 
+	// Parameters:
+	//   ctx (context.Context) - The context for the operation.
+	//   s2 (Series[T]) - The second series to compare with the current series.
+	//   options (optional) - Additional options to control the comparison behavior.
+	//
+	// Returns:
+	//   bool - True if the two series are equal, otherwise false.
+	//   error - Any error that may have occurred during the comparison.
+	IsEqual(ctx context.Context, s2 Series[T], options ...IsEqualOptions) (bool, error)
+
+	// Apply applies a transformation function to each element of the series and returns a new series.
+	// The transformation is applied element-wise across the series.
+	// 
+	// Parameters:
+	//   ctx (context.Context) - The context for the operation.
+	//   fn (ApplySeriesFn[T]) - The function to apply to each element of the series.
+	//   options (optional) - Additional options to control the application of the transformation.
+	//
+	// Returns:
+	//   Series[T] - A new series with the transformed values.
+	//   error - Any error that may have occurred during the application.
+	Apply(ctx context.Context, fn ApplySeriesFn[T], options ...ApplyOptions) (Series[T], error)
+
+	// Filter filters the series based on a predicate function and returns a new series with the filtered values.
+	// 
+	// Parameters:
+	//   ctx (context.Context) - The context for the operation.
+	//   fn (FilterSeriesFn[T]) - The predicate function to filter the series.
+	//   options (optional) - Additional options to control the filtering behavior.
+	//
+	// Returns:
+	//   Series[T] - A new series with only the values that satisfy the filter condition.
+	//   error - Any error that may have occurred during the filtering.
+	Filter(ctx context.Context, fn FilterSeriesFn[T], options ...FilterOptions) (Series[T], error)
+
+	// SeriesAny is embedded to allow compatibility with any series of any type.
+	// This allows a series of any type to be used in contexts where the type is not known in advance.
+	SeriesAny
+}
+
+
+// SeriesAny defines the common interface for handling series data of any type.
+// This interface allows operations such as appending, removing, updating, 
+// sorting, and more, with the underlying data in the series being agnostic to its type.
+type SeriesAny interface {
+
+	// Name returns the name of the series.
+	// 
+	// Parameters:
+	//   options (optional) - Additional options that might influence how the name is returned.
+	//
+	// Returns:
+	//   string - The name of the series.
+	Name(options ...Options) string
+
+	// NRows returns the number of rows the series contains.
+	// This is useful for determining the size of the series.
+	// 
+	// Parameters:
+	//   options (optional) - Additional options for counting the rows.
+	//
+	// Returns:
+	//   int - The number of rows in the series.
+	NRows(options ...Options) int
+
+	// Remove removes the value at the specified row index.
+	// This allows for the deletion of a specific value from the series.
+	// 
+	// Parameters:
+	//   row (int) - The index of the row to remove.
+	//   options (optional) - Additional options for the removal operation.
+	//
+	// Returns:
+	//   void
+	Remove(row int, options ...Options)
+
+	// Rename renames the series to a new name.
+	// 
+	// Parameters:
+	//   n (string) - The new name to assign to the series.
+	//   options (optional) - Additional options for renaming.
+	//
+	// Returns:
+	//   void
+	Rename(n string, options ...Options)
+
+	// Reset clears all data from the series, effectively emptying it.
+	// 
+	// Parameters:
+	//   options (optional) - Additional options for clearing the data.
+	//
+	// Returns:
+	//   void
+	Reset(options ...Options)
+
+	// Swap swaps the values at two row positions.
+	// This method allows you to exchange the values of two rows in the series.
+	// 
+	// Parameters:
+	//   row1 (int) - The first row index.
+	//   row2 (int) - The second row index.
+	//   options (optional) - Additional options for the swap.
+	//
+	// Returns:
+	//   void
 	Swap(row1, row2 int, options ...Options)
 
-	// IsEqualAnyFunc	returns true if a is equal to b.
-	IsEqualAnyFunc(a, b any) bool
-
-	// IsLessThanAnyFunc	returns true if a is less than b.
-	IsLessThanAnyFunc(a, b any) bool
-
-	// SetIsEqualAnyFunc	sets a function which can be used to determine
-	// if 2 values in the series are equal.
-	SetIsEqualAnyFunc(f CompareFn[any])
-
-	// SetIsLessThanAnyFunc	sets a function which can be used to determine
-	// if a value is less than another in the series.
-	SetIsLessThanAnyFunc(f CompareFn[any])
-
-	// Sort will sort the series.
-	// It will return true if sorting was completed or false when the context is canceled.
+	// Sort sorts the series in ascending order.
+	// It returns `true` if the sorting was completed successfully, or `false` if the operation was canceled.
+	// 
+	// Parameters:
+	//   ctx (context.Context) - The context to handle cancellation.
+	//   options (optional) - Additional options for sorting, such as sorting criteria.
+	//
+	// Returns:
+	//   bool - True if sorting completed, false if canceled.
 	Sort(ctx context.Context, options ...SortOptions) (completed bool)
 
-	// CopyAny will create a new copy of the series.
-	// It is recommended that you lock the Series before attempting
-	// to Copy.
-	CopyAny(options ...RangeOptions) SeriesAny
-
-	// Table will produce the Series in a table.
+	// Table generates a table representation of the series' values.
+	// This could be used to display the series in a tabular format, useful for debugging or analysis.
+	// 
+	// Parameters:
+	//   options (optional) - Additional options for customizing the table output.
+	//
+	// Returns:
+	//   string - The table representation of the series.
 	Table(options ...TableOptions) string
 
-	// String implements the fmt.Stringer interface. It does not lock the Series.
+	// String implements the fmt.Stringer interface.
+	// It provides a string representation of the series.
+	// This method does not lock the series, so it should be used in a safe context.
+	// 
+	// Returns:
+	//   string - The string representation of the series.
 	String() string
 
-	// FillRandAny will fill a Series with random data.
-	FillRandAny(rnd RandFn[any])
+	// ValueString returns the string representation of a particular row.
+	// It uses the formatter function set in SetValueToStringFormatter to control how the values are formatted.
+	// By default, it returns "NaN" for nil values.
+	// 
+	// Parameters:
+	//   row (int) - The row index to get the string representation of.
+	//   options (optional) - Additional options for formatting the value.
+	//
+	// Returns:
+	//   string - The string representation of the value in the specified row.
+	ValueString(row int, options ...Options) string
 
-	// IsEqualAny returns true if s2's values are equal to s.
-	IsEqualAny(ctx context.Context, s2 SeriesAny, options ...IsEqualOptions) (bool, error)
+	// ValueAny returns the value stored at the specified row as an `any` type.
+	// This allows for retrieving values of any type from the series.
+	// 
+	// Parameters:
+	//   row (int) - The row index to get the value from.
+	//   options (optional) - Additional options for retrieving the value.
+	//
+	// Returns:
+	//   any - The value stored at the specified row.
+	valueAny(row int, options ...Options) any
 
-	// RWMutex Lock
+	// Prepend adds a value to the beginning of the series.
+	// This shifts the current series values and inserts the new value at the start.
+	// 
+	// Parameters:
+	//   val (any) - The value to prepend to the series.
+	//   options (optional) - Additional options for the prepend operation.
+	//
+	// Returns:
+	//   void
+	prependAny(val any, options ...Options)
+
+	// AppendAny adds a value to the end of the series.
+	// It appends the given value to the series and returns the new size of the series.
+	// 
+	// Parameters:
+	//   val (any) - The value to append to the series.
+	//   options (optional) - Additional options for the append operation.
+	//
+	// Returns:
+	//   int - The new size of the series after the value is appended.
+	appendAny(val any, options ...Options) int
+
+	// InsertAny inserts a value at a specified row in the series.
+	// All existing values from that row onward are shifted by one position.
+	// 
+	// Parameters:
+	//   row (int) - The row index at which to insert the value.
+	//   val (any) - The value to insert.
+	//   options (optional) - Additional options for the insert operation.
+	//
+	// Returns:
+	//   void
+	insertAny(row int, val any, options ...Options)
+
+	// Update updates the value at the specified row index with a new value.
+	// 
+	// Parameters:
+	//   row (int) - The row index of the value to update.
+	//   val (any) - The new value to assign to the row.
+	//   options (optional) - Additional options for the update operation.
+	//
+	// Returns:
+	//   void
+	updateAny(row int, val any, options ...Options)
+
+	// IteratorAny returns an iterator for the series, which can be used to iterate through all its values.
+	// 
+	// Parameters:
+	//   options (optional) - Additional options for controlling the iteration behavior.
+	//
+	// Returns:
+	//   Iterator[any] - An iterator to iterate over the series values.
+	iteratorAny(options ...IteratorOptions) Iterator[any]
+
+	// IsEqualAnyFunc checks whether two values of type `any` are equal.
+	// This function can be used as a comparator for equality checks in the series.
+	// 
+	// Parameters:
+	//   a (any) - The first value to compare.
+	//   b (any) - The second value to compare.
+	//
+	// Returns:
+	//   bool - True if the values are equal, otherwise false.
+	isEqualAnyFunc(a, b any) bool
+
+	// IsLessThanAnyFunc checks whether the first value is less than the second value.
+	// This function can be used as a comparator for sorting or filtering the series.
+	// 
+	// Parameters:
+	//   a (any) - The first value to compare.
+	//   b (any) - The second value to compare.
+	//
+	// Returns:
+	//   bool - True if the first value is less than the second, otherwise false.
+	isLessThanAnyFunc(a, b any) bool
+
+	// SetIsEqualAnyFunc sets a custom function to compare equality between two values in the series.
+	// This function is used when determining if two values are equal for operations like filtering or sorting.
+	// 
+	// Parameters:
+	//   f (CompareFn[any]) - The comparison function to set for equality checks.
+	//
+	// Returns:
+	//   void
+	setIsEqualAnyFunc(f CompareFn[any])
+
+	// SetIsLessThanAnyFunc sets a custom function to compare if one value is less than another in the series.
+	// This function is used when sorting or performing comparisons between series values.
+	// 
+	// Parameters:
+	//   f (CompareFn[any]) - The comparison function to set for less-than checks.
+	//
+	// Returns:
+	//   void
+	setIsLessThanAnyFunc(f CompareFn[any])
+
+	// CopyAny creates a copy of the series with the same values.
+	// This can be useful for operations where you need a duplicate of the series to modify independently.
+	// 
+	// Parameters:
+	//   options (optional) - Additional options to control how the copy is created.
+	//
+	// Returns:
+	//   SeriesAny - A new series instance that is a copy of the current series.
+	copyAny(options ...RangeOptions) SeriesAny
+
+	// FillRandAny fills the series with random values generated by a provided random function.
+	// This allows populating a series with random data for testing or simulation purposes.
+	// 
+	// Parameters:
+	//   rnd (RandFn[any]) - The random function to use for generating values in the series.
+	//
+	// Returns:
+	//   void
+	fillRandAny(rnd RandFn[any])
+
+	// IsEqualAny checks if two series of the same type are equal.
+	// This compares the values in the current series to those in another series of the same type.
+	// 
+	// Parameters:
+	//   ctx (context.Context) - The context to manage the operation (e.g., cancellation).
+	//   s2 (SeriesAny) - The second series to compare against.
+	//   options (optional) - Additional options for customizing the equality check.
+	//
+	// Returns:
+	//   bool - True if the series are equal, false otherwise.
+	//   error - Any error that may have occurred during the comparison.
+	isEqualAny(ctx context.Context, s2 SeriesAny, options ...IsEqualOptions) (bool, error)
+
+	// cloneAsEmpty creates a clone of the series, but with no values.
+	// This is useful when creating an empty series of the same type but with a new instance.
+	// 
+	// Parameters:
+	//   size (optional) - The size of the new empty series.
+	//
+	// Returns:
+	//   SeriesAny - A new empty series.
+	cloneAsEmpty(size ...int) SeriesAny
+
+	// Type returns the type of the series as a string.
+	// 
+	// Returns:
+	//   string - The type of the series.
+	Type() string
+
+	// Lock locks the series for exclusive access.
+	// This is useful when performing operations that require safe concurrent access.
+	// 
+	// Returns:
+	//   void
 	Lock()
 
-	// RWMutex Unlock 
+	// Unlock unlocks the series, allowing other goroutines to access it.
+	// 
+	// Returns:
+	//   void
 	Unlock()
 
-	// RWMutex RLock
+	// RLock locks the series for read-only access.
+	// This allows multiple goroutines to read from the series concurrently but prevents write access.
+	// 
+	// Returns:
+	//   void
 	RLock()
 
-	// RWMutex RUnlock
+	// RUnlock unlocks the series after a read lock.
+	// 
+	// Returns:
+	//   void
 	RUnlock()
+}
 
-	// Creates clone with empty Values
-	cloneAsEmpty(size ...int) SeriesAny
+
+// DataFrame represents a table-like structure that contains multiple Series.
+// It provides methods to manipulate, query, and analyze tabular data using series.
+type DataFrame interface {
+
+	// Series returns all the Series contained in the DataFrame.
+	// The Series are returned as a slice of SeriesAny, which allows for series of any type.
+	// 
+	// Returns:
+	//   []SeriesAny - The list of Series contained in the DataFrame.
+	Series() []SeriesAny
+
+	// NRows returns the number of rows in the DataFrame.
+	// It indicates how many data entries (rows) are present across all series in the DataFrame.
+	// 
+	// Parameters:
+	//   options (optional) - Additional options that may influence the row count (e.g., locking behavior).
+	//
+	// Returns:
+	//   int - The number of rows in the DataFrame.
+	NRows(options ...Options) int
+
+	// Row returns a map where each key is a series name, and the value is the corresponding value at the given row.
+	// This method allows you to access the values from multiple series in a single row.
+	// 
+	// Parameters:
+	//   row (int) - The index of the row to retrieve.
+	//   options (optional) - Additional options for accessing the row (e.g., locking behavior).
+	//
+	// Returns:
+	//   map[string]any - A map with series names as keys and the corresponding values at the specified row.
+	Row(row int, options ...Options) map[string]any
+
+	// Iterator returns an iterator that can be used to iterate over all rows in the DataFrame.
+	// Each element returned by the iterator is a map where the keys are the series names, and the values are the row values.
+	// 
+	// Parameters:
+	//   options (optional) - Additional options for the iteration behavior (e.g., locking behavior).
+	//
+	// Returns:
+	//   Iterator[map[string]any] - An iterator for iterating over the DataFrame rows.
+	Iterator(options ...IteratorOptions) Iterator[map[string]any]
+
+	// Prepend adds a value to the beginning of the DataFrame.
+	// This shifts all existing rows in all series by one position and inserts the new value at the start.
+	// 
+	// Parameters:
+	//   vals (any) - The values to prepend to the DataFrame. Can be a collection of values or a single value.
+	//   options (optional) - Additional options for the operation (e.g., locking behavior).
+	//
+	// Returns:
+	//   void
+	Prepend(vals any, options ...Options)
+
+	// Append adds a value to the end of the DataFrame.
+	// This appends the given values to the last row of each series.
+	// 
+	// Parameters:
+	//   vals (any) - The values to append to the DataFrame. Can be a collection of values or a single value.
+	//   options (optional) - Additional options for the operation (e.g., locking behavior).
+	//
+	// Returns:
+	//   void
+	Append(vals any, options ...Options)
+
+	// Insert inserts a value at the specified row in the DataFrame.
+	// It shifts all existing rows from that position onward by one and inserts the new value at the specified position.
+	// 
+	// Parameters:
+	//   row (int) - The row index at which to insert the values.
+	//   vals (any) - The values to insert at the specified row.
+	//   options (optional) - Additional options for the operation (e.g., locking behavior).
+	//
+	// Returns:
+	//   void
+	Insert(row int, vals any, options ...Options)
+
+	// Remove removes the value at the specified row from the DataFrame.
+	// This shifts all remaining rows after the removed row by one position.
+	// 
+	// Parameters:
+	//   row (int) - The index of the row to remove.
+	//   options (optional) - Additional options for the removal operation (e.g., locking behavior).
+	//
+	// Returns:
+	//   void
+	Remove(row int, options ...Options)
+
+	// Update updates the value at the specified row and column in the DataFrame.
+	// The `col` parameter is the name of the series/column to update, and `val` is the new value.
+	// 
+	// Parameters:
+	//   row (int) - The row index to update.
+	//   col (any) - The column name (series) to update.
+	//   val (any) - The new value to assign to the cell.
+	//   options (optional) - Additional options for the update operation (e.g., locking behavior).
+	//
+	// Returns:
+	//   void
+	Update(row int, col any, val any, options ...Options)
+
+	// UpdateRow updates all values in the specified row with the provided new values.
+	// The `vals` parameter is a collection of values corresponding to each column in the row.
+	// 
+	// Parameters:
+	//   row (int) - The row index to update.
+	//   vals (any) - The new values to set for each column in the row.
+	//   options (optional) - Additional options for the update operation (e.g., locking behavior).
+	//
+	// Returns:
+	//   void
+	UpdateRow(row int, vals any, options ...Options)
+
+	// Names returns a list of the series names contained in the DataFrame.
+	// These names can be used to refer to specific columns (series) in operations.
+	// 
+	// Parameters:
+	//   options (optional) - Additional options for retrieving the series names (e.g., locking behavior).
+	//
+	// Returns:
+	//   []string - The list of names of all the series in the DataFrame.
+	Names(options ...Options) []string
+
+	// MustNameToColumn maps a series name to its corresponding column index.
+	// It returns the column index if the name exists or panics if it doesn't.
+	// 
+	// Parameters:
+	//   seriesName (string) - The name of the series to look up.
+	//   options (optional) - Additional options for retrieving the column index.
+	//
+	// Returns:
+	//   int - The column index of the series.
+	// 
+	// Panics:
+	//   If the series name doesn't exist, this function will panic.
+	MustNameToColumn(seriesName string, options ...Options) int
+
+	// NameToColumn maps a series name to its corresponding column index.
+	// It returns the column index and an error if the series name is not found.
+	// 
+	// Parameters:
+	//   seriesName (string) - The name of the series to look up.
+	//   options (optional) - Additional options for retrieving the column index.
+	//
+	// Returns:
+	//   int - The column index of the series (or an error if not found).
+	//   error - An error if the series name does not exist.
+	NameToColumn(seriesName string, options ...Options) (int, error)
+
+	// ReorderColumns allows reordering the columns (series) in the DataFrame.
+	// The `newOrder` parameter should be a list of series names that represents the desired column order.
+	// 
+	// Parameters:
+	//   newOrder ([]string) - The new order of series names.
+	//   options (optional) - Additional options for the reordering process.
+	//
+	// Returns:
+	//   error - Returns an error if reordering fails, e.g., if any series name is invalid.
+	ReorderColumns(newOrder []string, options ...Options) error
+
+	// RemoveSeries removes a series from the DataFrame by its name.
+	// The series will be removed along with all the values in that column.
+	// 
+	// Parameters:
+	//   seriesName (string) - The name of the series to remove.
+	//   options (optional) - Additional options for the removal operation.
+	//
+	// Returns:
+	//   error - Returns an error if the series name does not exist or other issues occur during removal.
+	RemoveSeries(seriesName string, options ...Options) error
+
+	// AddSeries adds a new series to the DataFrame.
+	// 
+	// Parameters:
+	//   s (SeriesAny) - The series to add to the DataFrame.
+	//   colN (*int) - A pointer to an integer, where the new series index will be stored.
+	//   options (optional) - Additional options for the addition operation.
+	//
+	// Returns:
+	//   error - Returns an error if the series could not be added.
+	AddSeries(s SeriesAny, colN *int, options ...Options) error
+
+	// Swap swaps two rows at the given indices.
+	// This will swap the values across all series at the specified row positions.
+	// 
+	// Parameters:
+	//   row1 (int) - The index of the first row to swap.
+	//   row2 (int) - The index of the second row to swap.
+	//   options (optional) - Additional options for the swapping operation.
+	//
+	// Returns:
+	//   void
+	Swap(row1, row2 int, options ...Options)
+
+	// Lock locks the DataFrame for exclusive access.
+	// If `deep` is true, the DataFrame and its series will be locked recursively.
+	// 
+	// Parameters:
+	//   deep (optional) - If true, the DataFrame and its Series will be locked recursively.
+	//
+	// Returns:
+	//   void
+	Lock(deep ...bool)
+
+	// Unlock unlocks the DataFrame, allowing other goroutines to access it.
+	// If `deep` is true, the DataFrame and its series will be unlocked recursively.
+	// 
+	// Parameters:
+	//   deep (optional) - If true, the DataFrame and its Series will be unlocked recursively.
+	//
+	// Returns:
+	//   void
+	Unlock(deep ...bool)
+
+	// RLock locks the DataFrame for read-only access.
+	// If `deep` is true, the DataFrame and its series will be locked recursively.
+	// 
+	// Parameters:
+	//   deep (optional) - If true, the DataFrame and its Series will be locked recursively for reading.
+	//
+	// Returns:
+	//   void
+	RLock(deep ...bool)
+
+	// RUnlock unlocks the read-only lock on the DataFrame.
+	// If `deep` is true, the DataFrame and its series will be unlocked recursively.
+	// 
+	// Parameters:
+	//   deep (optional) - If true, the DataFrame and its Series will be unlocked recursively.
+	//
+	// Returns:
+	//   void
+	RUnlock(deep ...bool)
+
+	// Copy creates a deep copy of the DataFrame.
+	// It returns a new DataFrame with the same data as the original.
+	// 
+	// Parameters:
+	//   options (optional) - Additional options for copying (e.g., range of rows to copy).
+	//
+	// Returns:
+	//   DataFrame - A new DataFrame containing the same data as the original.
+	Copy(options ...RangeOptions) DataFrame
+
+	// Table returns the DataFrame as a string in a tabular format.
+	// It generates a formatted table representation of the DataFrame's data.
+	// 
+	// Parameters:
+	//   options (optional) - Additional options for formatting the table (e.g., column width).
+	//
+	// Returns:
+	//   string - A string representing the DataFrame as a table.
+	Table(options ...TableOptions) string
+
+	// String returns the string representation of the DataFrame.
+	// This representation is typically a summary or a concise version of the DataFrame's content.
+	// 
+	// Returns:
+	//   string - The string representation of the DataFrame.
+	String() string
+
+	// FillRand fills the DataFrame with random values generated by the provided random function.
+	// The function `rnd` should be able to generate random values for each series.
+	// 
+	// Parameters:
+	//   rnd (RandFn[any]) - A random function that generates random values for each column.
+	//
+	// Returns:
+	//   void
+	FillRand(rnd RandFn[any])
+
+	// IsEqual compares two DataFrames for equality.
+	// It returns true if the DataFrames have the same shape and values, and false otherwise.
+	// 
+	// Parameters:
+	//   ctx (context.Context) - The context for controlling the operation.
+	//   df2 (DataFrame) - The DataFrame to compare with the current DataFrame.
+	//   options (optional) - Additional options for the comparison (e.g., ignoring specific differences).
+	//
+	// Returns:
+	//   bool - Whether the DataFrames are equal.
+	//   error - An error if comparison fails (e.g., invalid arguments).
+	IsEqual(ctx context.Context, df2 DataFrame, options ...IsEqualOptions) (bool, error)
+
+	// Apply applies a function across all rows of the DataFrame.
+	// The function `fn` takes a DataFrame and modifies or operates on its data.
+	// 
+	// Parameters:
+	//   ctx (context.Context) - The context for controlling the operation.
+	//   fn (ApplyDataFrameFn) - The function to apply to the DataFrame.
+	//   options (optional) - Additional options for the apply operation (e.g., range of rows).
+	//
+	// Returns:
+	//   DataFrame - The resulting DataFrame after applying the function.
+	//   error - An error if the function fails.
+	Apply(ctx context.Context, fn ApplyDataFrameFn, options ...ApplyOptions) (DataFrame, error)
+
+	// Sort sorts the DataFrame based on the provided keys.
+	// The `keys` parameter is a list of SortKey, each defining the column and direction for sorting.
+	// 
+	// Parameters:
+	//   ctx (context.Context) - The context for controlling the sorting operation.
+	//   keys ([]SortKey) - The keys to sort by, which include column names and sort directions.
+	//   options (optional) - Additional options for the sorting operation (e.g., sorting stability).
+	//
+	// Returns:
+	//   bool - A flag indicating whether the sorting operation is completed.
+	//   error - An error if sorting fails.
+	Sort(ctx context.Context, keys []SortKey, options ...SortOptions) (completed bool)
 }

@@ -10,42 +10,35 @@ import (
 	"sync"
 
 	"github.com/olekukonko/tablewriter"
-	// "github.com/google/go-cmp/cmp"
 )
 
-type Series[T any] struct {
+type series[T any] struct {
 	valFormatter ValueToStringFormatter
 
 	name, typeT string
-	
+
 	isEqualFunc, isLessThanFunc CompareFn[T]
 
-	// Values is exported to better improve interoperability with the gonum package.
-	//
-	// See: https://godoc.org/gonum.org/v1/gonum
-	//
-	// WARNING: Do not modify directly.
-	Values   []T
+	values []T
 
-	sync.RWMutex
+	mutex sync.RWMutex
 }
 
 // NewSeries creates a series of type T with defined name. Size of the series
-// can be prealocated by passing `init`. Series can also by filled by data passed
-// as vals. 
-// 
-// Example: 
+// can be prealocated by passing `init`. series can also by filled by data passed
+// as vals.
+//
+// Example:
 //
 // x := NewSeries[float64]("x", nil, 1, 2, 3)
 // y := NewSeries("y", nil, 1., 2., 3.)
-//
-func NewSeries[T any](name string, init *SeriesInit, vals ...T) *Series[T] {
-	s := &Series[T] {
-		name: name,
+func NewSeries[T any](name string, init *SeriesInit, vals ...T) *series[T] {
+	s := &series[T]{
+		name:         name,
 		valFormatter: DefaultValueFormatter,
-		typeT: formatType[T](),
-		isEqualFunc: IsEqualDefaultFunc[T],
-		Values: []T{},
+		typeT:        formatType[T](),
+		isEqualFunc:  IsEqualDefaultFunc[T],
+		values:       []T{},
 	}
 
 	var size, capacity int
@@ -63,23 +56,16 @@ func NewSeries[T any](name string, init *SeriesInit, vals ...T) *Series[T] {
 		capacity = size
 	}
 
-	s.Values = make([]T, size, capacity)
-	//s.valFormatter = DefaultValueFormatter
+	s.values = make([]T, size, capacity)
 
-	copy(s.Values, vals)
-	// for idx, v := range vals {
-	// 	if isNaN(v) {
-	// 		s.nilCount++
-	// 	}
-	// 	s.Values[idx] = v
-	// }
+	copy(s.values, vals)
 
-	s.fillDefault(s.Values, len(vals), size)
+	s.fillDefault(s.values, len(vals), size)
 	return s
 }
 
 // Fill values as NaN if series is type of float32 or float 64
-func (s *Series[T]) fillDefault(vals any, lVals, size int) {
+func (s *series[T]) fillDefault(vals any, lVals, size int) {
 	// s.nilCount = s.nilCount + size - lVals
 	switch v := vals.(type) {
 	case []float64:
@@ -94,80 +80,89 @@ func (s *Series[T]) fillDefault(vals any, lVals, size int) {
 }
 
 // Name returns the series name.
-func (s *Series[T]) Name(options ...Options) string {
+func (s *series[T]) Name(options ...Options) string {
 	opts := DefaultOptions(options...)
 
 	if !opts.DontLock {
-		s.RLock(); defer s.RUnlock()
+		s.RLock()
+		defer s.RUnlock()
 	}
-	
+
 	return s.name
 }
 
 // Rename renames the series.
-func (s *Series[T]) Rename(n string, options ...Options) {
+func (s *series[T]) Rename(n string, options ...Options) {
 	opts := DefaultOptions(options...)
 
 	if !opts.DontLock {
-		s.RLock(); defer s.RUnlock()
+		s.RLock()
+		defer s.RUnlock()
 	}
 
 	s.name = n
 }
 
-func (s *Series[T]) Type() string {
+func (s *series[T]) Type() string {
 	return s.typeT
 }
 
 // NRows returns how many rows the series contains.
-func (s *Series[T]) NRows(options ...Options) int {
+func (s *series[T]) NRows(options ...Options) int {
 	opts := DefaultOptions(options...)
-	
+
 	if !opts.DontLock {
-		s.RLock(); defer s.RUnlock()
+		s.RLock()
+		defer s.RUnlock()
 	}
 
-	return len(s.Values)
+	return len(s.values)
+}
+
+func (s *series[T]) Values() []T {
+	return s.values
 }
 
 // Value returns the value of a particular row.
-func (s *Series[T]) Value(row int, options ...Options) T {
+func (s *series[T]) Value(row int, options ...Options) T {
 	opts := DefaultOptions(options...)
 
 	if !opts.DontLock {
-		s.RLock(); defer s.RUnlock()
-	}
-	
-	if row < 0 {
-		return s.Values[len(s.Values) + row]
+		s.RLock()
+		defer s.RUnlock()
 	}
 
-	return s.Values[row]
+	if row < 0 {
+		return s.values[len(s.values)+row]
+	}
+
+	return s.values[row]
 }
 
 // ValueString returns a string representation of a
 // particular row. The string representation is defined
 // by the function set in SetValueToStringFormatter.
-func (s *Series[T]) ValueString(row int, options ...Options) string {
+func (s *series[T]) ValueString(row int, options ...Options) string {
 	return s.valFormatter(s.Value(row, options...))
 }
 
 // Prepend is used to set a value to the beginning of the
 // series.
-func (s *Series[T]) Prepend(val []T, options ...Options) {
+func (s *series[T]) Prepend(val []T, options ...Options) {
 	opts := DefaultOptions(options...)
-	
+
 	if !opts.DontLock {
-		s.Lock(); defer s.Unlock()
+		s.Lock()
+		defer s.Unlock()
 	}
-	
+
 	// See: https://stackoverflow.com/questions/41914386/what-is-the-mechanism-of-using-append-to-prepend-in-go
-	
-	if cap(s.Values) > len(s.Values) + len(val) {
+
+	if cap(s.values) > len(s.values)+len(val) {
 		// There is already extra capacity so copy current values by 1 spot
-		s.Values = s.Values[:len(s.Values) + len(val)]
-		copy(s.Values[len(val):], s.Values)
-		copy(s.Values, val)
+		s.values = s.values[:len(s.values)+len(val)]
+		copy(s.values[len(val):], s.values)
+		copy(s.values, val)
 		return
 	}
 
@@ -176,14 +171,15 @@ func (s *Series[T]) Prepend(val []T, options ...Options) {
 }
 
 // Append is used to set a value to the end of the series.
-func (s *Series[T]) Append(val []T, options ...Options) int {
+func (s *series[T]) Append(val []T, options ...Options) int {
 	opts := DefaultOptions(options...)
-	
+
 	if !opts.DontLock {
-		s.Lock(); defer s.Unlock()
+		s.Lock()
+		defer s.Unlock()
 	}
 
-	row := len(s.Values)
+	row := len(s.values)
 	s.insert(row, val)
 	return row
 }
@@ -191,65 +187,69 @@ func (s *Series[T]) Append(val []T, options ...Options) int {
 // Insert is used to set a value at an arbitrary row in
 // the series. All existing values from that row onwards
 // are shifted by 1.
-func (s *Series[T]) Insert(row int, val []T, options ...Options) {
+func (s *series[T]) Insert(row int, val []T, options ...Options) {
 	opts := DefaultOptions(options...)
-	
+
 	if !opts.DontLock {
-		s.Lock(); defer s.Unlock()
+		s.Lock()
+		defer s.Unlock()
 	}
-	
+
 	s.insert(row, val)
 }
 
-func (s *Series[T]) insert(row int, val []T) {
-	s.Values = append(s.Values[:row], append(val, s.Values[row:]...)...)
+func (s *series[T]) insert(row int, val []T) {
+	s.values = append(s.values[:row], append(val, s.values[row:]...)...)
 }
 
 // Remove is used to delete the value of a particular row.
-func (s *Series[T]) Remove(row int, options ...Options) {
+func (s *series[T]) Remove(row int, options ...Options) {
 	opts := DefaultOptions(options...)
-	
+
 	if !opts.DontLock {
-		s.Lock(); defer s.Unlock()
+		s.Lock()
+		defer s.Unlock()
 	}
-	
-	s.Values = append(s.Values[:row], s.Values[row+1:]...)
+
+	s.values = append(s.values[:row], s.values[row+1:]...)
 }
 
-// Reset is used clear all data contained in the Series.
-func (s *Series[T]) Reset(options ...Options) {
+// Reset is used clear all data contained in the series.
+func (s *series[T]) Reset(options ...Options) {
 	opts := DefaultOptions(options...)
-	
+
 	if !opts.DontLock {
-		s.Lock(); defer s.Unlock()
+		s.Lock()
+		defer s.Unlock()
 	}
-	
-	s.Values = []T{}
+
+	s.values = []T{}
 }
 
 // Update is used to update the value of a particular row.
-func (s *Series[T]) Update(row int, val T, options ...Options) {
+func (s *series[T]) Update(row int, val T, options ...Options) {
 	opts := DefaultOptions(options...)
 
 	if !opts.DontLock {
-		s.Lock(); defer s.Unlock()
+		s.Lock()
+		defer s.Unlock()
 	}
 
 	if row < 0 {
-		row = len(s.Values) + row
+		row = len(s.values) + row
 	}
 
-	s.Values[row] = val
+	s.values[row] = val
 }
 
 // valuesIterator will return a function that can be used to iterate through all the values.
-func (s *Series[T]) valuesIterator(options ...IteratorOptions) IteratorFn[T] {
+func (s *series[T]) valuesIterator(options ...IteratorOptions) IteratorFn[T] {
 	opts := DefaultOptions(options...)
 
 	var row, step = opts.InitialRow, 1
 
 	if row < 0 {
-		row = len(s.Values) + row
+		row = len(s.values) + row
 	}
 
 	if opts.Step != 0 {
@@ -260,22 +260,23 @@ func (s *Series[T]) valuesIterator(options ...IteratorOptions) IteratorFn[T] {
 
 	return func() (int, T, int, bool) {
 		if !opts.DontLock {
-			s.RLock(); defer s.RUnlock()
+			s.RLock()
+			defer s.RUnlock()
 		}
 
 		var t int
 		if step > 0 {
-			t = (len(s.Values) - initial - 1) / step + 1
+			t = (len(s.values)-initial-1)/step + 1
 		} else {
-			t = -initial / step + 1
+			t = -initial/step + 1
 		}
 
-		if row > len(s.Values)-1 || row < 0 {
+		if row > len(s.values)-1 || row < 0 {
 			// Don't iterate further
 			return -1, *new(T), t, false
 		}
 
-	 	out := s.Values[row]
+		out := s.values[row]
 
 		row = row + step
 		return row - step, out, t, true
@@ -283,14 +284,14 @@ func (s *Series[T]) valuesIterator(options ...IteratorOptions) IteratorFn[T] {
 }
 
 // Iterator will return a iterator that can be used to iterate through all the values.
-func (s *Series[T]) Iterator(options ...IteratorOptions) Iterator[T] {
+func (s *series[T]) Iterator(options ...IteratorOptions) Iterator[T] {
 	return NewIterator(s.valuesIterator(options...))
 }
 
 // SetValueToStringFormatter is used to set a function
 // to convert the value of a particular row to a string
 // representation.
-func (s *Series[T]) SetValueToStringFormatter(f ValueToStringFormatter) {
+func (s *series[T]) SetValueToStringFormatter(f ValueToStringFormatter) {
 	if f == nil {
 		s.valFormatter = DefaultValueFormatter
 		return
@@ -299,7 +300,7 @@ func (s *Series[T]) SetValueToStringFormatter(f ValueToStringFormatter) {
 }
 
 // Swap is used to swap 2 values based on their row position.
-func (s *Series[T]) Swap(row1, row2 int, options ...Options) {
+func (s *series[T]) Swap(row1, row2 int, options ...Options) {
 	if row1 == row2 {
 		return
 	}
@@ -307,14 +308,15 @@ func (s *Series[T]) Swap(row1, row2 int, options ...Options) {
 	opts := DefaultOptions(options...)
 
 	if !opts.DontLock {
-		s.Lock(); defer s.Unlock()
+		s.Lock()
+		defer s.Unlock()
 	}
 
-	s.Values[row1], s.Values[row2] = s.Values[row2], s.Values[row1]
+	s.values[row1], s.values[row2] = s.values[row2], s.values[row1]
 }
 
 // IsEqualFunc returns true if a is equal to b.
-func (s *Series[T]) IsEqualFunc(a, b T) bool {
+func (s *series[T]) IsEqualFunc(a, b T) bool {
 	if s.isEqualFunc == nil {
 		panic(errors.New("IsEqualFunc not set"))
 	}
@@ -323,7 +325,7 @@ func (s *Series[T]) IsEqualFunc(a, b T) bool {
 }
 
 // IsLessThanFunc returns true if a is less than b.
-func (s *Series[T]) IsLessThanFunc(a, b T) bool {
+func (s *series[T]) IsLessThanFunc(a, b T) bool {
 
 	if s.isLessThanFunc == nil {
 		panic(errors.New("IsLessThanFunc not set"))
@@ -334,7 +336,7 @@ func (s *Series[T]) IsLessThanFunc(a, b T) bool {
 
 // SetIsEqualFunc sets a function which can be used to determine
 // if 2 values in the series are equal.
-func (s *Series[T]) SetIsEqualFunc(f CompareFn[T]) {
+func (s *series[T]) SetIsEqualFunc(f CompareFn[T]) {
 	if f == nil {
 		// Return to default
 		s.isEqualFunc = IsEqualDefaultFunc[T]
@@ -345,14 +347,14 @@ func (s *Series[T]) SetIsEqualFunc(f CompareFn[T]) {
 
 // SetIsLessThanFunc sets a function which can be used to determine
 // if a value is less than another in the series.
-func (s *Series[T]) SetIsLessThanFunc(f CompareFn[T]) {
+func (s *series[T]) SetIsLessThanFunc(f CompareFn[T]) {
 	s.isLessThanFunc = f
 }
 
 // Sort will sort the series.
 // It will return true if sorting was completed or false when the context is canceled.
-func (s *Series[T]) Sort(ctx context.Context, options ...SortOptions) (completed bool) {
-	
+func (s *series[T]) Sort(ctx context.Context, options ...SortOptions) (completed bool) {
+
 	if s.isLessThanFunc == nil {
 		panic(errors.New("cannot sort without setting IsLessThanFunc"))
 	}
@@ -366,7 +368,8 @@ func (s *Series[T]) Sort(ctx context.Context, options ...SortOptions) (completed
 	opts := DefaultOptions(options...)
 
 	if !opts.DontLock {
-		s.Lock(); defer s.Unlock()
+		s.Lock()
+		defer s.Unlock()
 	}
 
 	sortFunc := func(i, j int) (ret bool) {
@@ -375,83 +378,84 @@ func (s *Series[T]) Sort(ctx context.Context, options ...SortOptions) (completed
 		}
 
 		if opts.Desc {
-			return !s.isLessThanFunc(s.Values[i], s.Values[j])
+			return !s.isLessThanFunc(s.values[i], s.values[j])
 		}
 
-		return s.isLessThanFunc(s.Values[i], s.Values[j])
+		return s.isLessThanFunc(s.values[i], s.values[j])
 	}
 
 	if opts.Stable {
-		sort.SliceStable(s.Values, sortFunc)
+		sort.SliceStable(s.values, sortFunc)
 	} else {
-		sort.Slice(s.Values, sortFunc)
+		sort.Slice(s.values, sortFunc)
 	}
 
 	return true
 }
 
 // Copy will create a new copy of the series.
-// It is recommended that you lock the Series before attempting
+// It is recommended that you lock the series before attempting
 // to Copy.
-func (s *Series[T]) Copy(options ...RangeOptions) *Series[T] {
-	
-	if len(s.Values) == 0 {
-		return &Series[T]{
-			valFormatter: 	s.valFormatter,
-			isEqualFunc: 	s.isEqualFunc,
+func (s *series[T]) Copy(options ...RangeOptions) Series[T] {
+
+	if len(s.values) == 0 {
+		return &series[T]{
+			valFormatter:   s.valFormatter,
+			isEqualFunc:    s.isEqualFunc,
 			isLessThanFunc: s.isLessThanFunc,
-			name:         	s.name,
-			typeT: 			s.typeT,
-			Values:       	[]T{},
+			name:           s.name,
+			typeT:          s.typeT,
+			values:         []T{},
 		}
 	}
 
 	opts := DefaultOptions(options...)
 
-	start, end, err := opts.Limits(len(s.Values))
+	start, end, err := opts.Limits(len(s.values))
 	if err != nil {
 		panic(err)
 	}
 
 	// Copy slice
-	x := s.Values[start : end + 1]
+	x := s.values[start : end+1]
 	newSlice := append(x[:0:0], x...)
 
-	return &Series[T]{
-		valFormatter: 	s.valFormatter,
-		isEqualFunc: 	s.isEqualFunc,
+	return &series[T]{
+		valFormatter:   s.valFormatter,
+		isEqualFunc:    s.isEqualFunc,
 		isLessThanFunc: s.isLessThanFunc,
-		name:         	s.name,
-		typeT: 			s.typeT,
-		Values:       	newSlice,
+		name:           s.name,
+		typeT:          s.typeT,
+		values:         newSlice,
 	}
 }
 
-// Table will produce the Series in a table.
-func (s *Series[T]) Table(options ...TableOptions) string {
+// Table will produce the series in a table.
+func (s *series[T]) Table(options ...TableOptions) string {
 	opts := DefaultOptions(options...)
-	
+
 	if !opts.DontLock {
-		s.RLock(); defer s.RUnlock()
+		s.RLock()
+		defer s.RUnlock()
 	}
 
 	data := [][]string{}
 
 	headers := []string{"", s.name} // row header is blank
-	footers := []string{fmt.Sprintf("%dx%d", len(s.Values), 1), s.Type()}
+	footers := []string{fmt.Sprintf("%dx%d", len(s.values), 1), s.Type()}
 
-	if len(s.Values) > 0 {
-		start, end, err := opts.Range.Limits(len(s.Values))
+	if len(s.values) > 0 {
+		start, end, err := opts.Range.Limits(len(s.values))
 		if err != nil {
 			panic(err)
 		}
 
 		for row := start; row <= end; row++ {
-			sVals := []string{ fmt.Sprintf("%d:", row), s.ValueString(row) }
+			sVals := []string{fmt.Sprintf("%d:", row), s.ValueString(row)}
 			data = append(data, sVals)
 		}
 	}
-	
+
 	var buf bytes.Buffer
 
 	table := tablewriter.NewWriter(&buf)
@@ -467,10 +471,10 @@ func (s *Series[T]) Table(options ...TableOptions) string {
 	return buf.String()
 }
 
-// String implements the fmt.Stringer interface. It does not lock the Series.
-func (s *Series[T]) String() string {
+// String implements the fmt.Stringer interface. It does not lock the series.
+func (s *series[T]) String() string {
 
-	count := len(s.Values)
+	count := len(s.values)
 
 	out := s.name + ": [ "
 
@@ -480,66 +484,66 @@ func (s *Series[T]) String() string {
 			if j == 3 {
 				out = out + "... "
 			}
-			out = out + s.valFormatter(s.Values[row]) + " "
+			out = out + s.valFormatter(s.values[row]) + " "
 		}
 		return out + "]"
 	}
 
-	for row := range s.Values {
-		out = out + s.valFormatter(s.Values[row]) + " "
+	for row := range s.values {
+		out = out + s.valFormatter(s.values[row]) + " "
 	}
 	return out + "]"
 
 }
 
-// FillRand will fill a Series with random data. 
-func (s *Series[T]) FillRand(rnd RandFn[T]) {
+// FillRand will fill a series with random data.
+func (s *series[T]) FillRand(rnd RandFn[T]) {
 
-
-	for i := 0; i < len(s.Values); i++ {
-		s.Values[i] = rnd()
+	for i := 0; i < len(s.values); i++ {
+		s.values[i] = rnd()
 	}
 
-	capacity := cap(s.Values)
-	length := len(s.Values)
+	capacity := cap(s.values)
+	length := len(s.values)
 
 	for i := 0; i < length; i++ {
-		s.Values[i] = rnd()
+		s.values[i] = rnd()
 	}
 
 	if capacity > length {
 		excess := capacity - length
 		for i := 0; i < excess; i++ {
-			s.Values = append(s.Values, rnd())
+			s.values = append(s.values, rnd())
 		}
 	}
 }
 
 // IsEqual returns true if s2's values are equal to s.
-func (s *Series[T]) IsEqual(ctx context.Context, s2 *Series[T], options ...IsEqualOptions) (bool, error) {
+func (s *series[T]) IsEqual(ctx context.Context, s2 Series[T], options ...IsEqualOptions) (bool, error) {
 	opts := DefaultOptions(options...)
 
 	if !opts.DontLock {
-		s.RLock(); defer s.RUnlock()
+		s.RLock()
+		defer s.RUnlock()
 	}
 
 	// Check number of values
-	if len(s.Values) != len(s2.Values) {
+	if len(s.values) != len(s2.Values()) {
 		return false, nil
 	}
 
 	// Check name
-	if opts.CheckName && s.name != s2.name {
+	if opts.CheckName && s.name != s2.Name(Options{DontLock: true}) {
 		return false, nil
 	}
 
 	// Check values
-	for i, v := range s.Values {
+	for i, v := range s.values {
 		if err := ctx.Err(); err != nil {
 			return false, err
 		}
 
-		if !s.isEqualFunc(v, s2.Values[i]) {
+		if !s.isEqualFunc(v, s2.Values()[i]) {
 			return false, nil
 		}
 	}
@@ -547,3 +551,20 @@ func (s *Series[T]) IsEqual(ctx context.Context, s2 *Series[T], options ...IsEqu
 	return true, nil
 }
 
+func (s *series[T]) Lock() {
+	s.mutex.Lock()
+}
+
+func (s *series[T]) Unlock() {
+	s.mutex.Unlock()
+}
+
+func (s *series[T]) RLock() {
+	s.mutex.RLock()
+}
+
+func (s *series[T]) RUnlock() {
+	s.mutex.RUnlock()
+}
+
+var _ Series[any] = (*series[any])(nil)

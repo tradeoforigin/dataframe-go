@@ -2,7 +2,6 @@ package tests
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -14,14 +13,14 @@ import (
 func TestCSVLoad(t *testing.T) {
 	ctx := context.Background()
 
-	var content, err = ioutil.ReadFile("data/data+header.csv")
+	var content, err = os.ReadFile("data/data+header.csv")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	var reader = strings.NewReader(string(content))
 
-	df1, err := csv.Load(ctx, reader, map[string]csv.ConverterAny {
+	df1, err := csv.Load(ctx, reader, map[string]csv.ConverterAny{
 		"A": csv.Float64,
 		"B": csv.Float64,
 		"C": csv.Float64,
@@ -32,27 +31,27 @@ func TestCSVLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	content, err = ioutil.ReadFile("data/data-header.csv")
+	content, err = os.ReadFile("data/data-header.csv")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	reader = strings.NewReader(string(content))
 
-	df2, err := csv.Load(ctx, reader, map[string]csv.ConverterAny {
+	df2, err := csv.Load(ctx, reader, map[string]csv.ConverterAny{
 		"A": csv.Float64,
 		"B": csv.Float64,
 		"C": csv.Float64,
 		"D": csv.Float64,
-	}, csv.LoadOptions{Headers: []string {"A", "B", "C", "D"}})
+	}, csv.LoadOptions{Headers: []string{"A", "B", "C", "D"}})
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	df1.ReorderColumns([]string { "A", "B", "C", "D" })
-	df2.ReorderColumns([]string { "A", "B", "C", "D" })
-	
+	df1.ReorderColumns([]string{"A", "B", "C", "D"})
+	df2.ReorderColumns([]string{"A", "B", "C", "D"})
+
 	if eq, err := df1.IsEqual(ctx, df2); !eq || err != nil {
 		t.Fatalf(`eq, err := df1.IsEqual(ctx, df2) = %v, %v, want match for true, <nil>`, eq, err)
 	}
@@ -67,9 +66,9 @@ func TestCSVExport(t *testing.T) {
 	df1 := dataframe.NewDataFrame(s1, s2)
 
 	f, err := os.OpenFile("data/export.csv", os.O_WRONLY|os.O_CREATE, 0600)
-    if err != nil {
-        t.Fatal(err)
-    }
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	err = csv.Export(ctx, f, df1)
 	if err != nil {
@@ -78,14 +77,14 @@ func TestCSVExport(t *testing.T) {
 
 	f.Close()
 
-	content, err := ioutil.ReadFile("data/export.csv")
+	content, err := os.ReadFile("data/export.csv")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := strings.NewReader(string(content))
 
-	df2, err := csv.Load(ctx, r, map[string]csv.ConverterAny {
+	df2, err := csv.Load(ctx, r, map[string]csv.ConverterAny{
 		"str": csv.String,
 		"num": csv.Int,
 	})
@@ -94,9 +93,9 @@ func TestCSVExport(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	df1.ReorderColumns([]string { "str", "num" })
-	df2.ReorderColumns([]string { "str", "num" })
-	
+	df1.ReorderColumns([]string{"str", "num"})
+	df2.ReorderColumns([]string{"str", "num"})
+
 	if eq, err := df1.IsEqual(ctx, df2); !eq || err != nil {
 		t.Fatalf(`eq, err := df1.IsEqual(ctx, df2) = %v, %v, want match for true, <nil>`, eq, err)
 	}
